@@ -14,12 +14,9 @@
 				"method": "GET",
 				"header": [],
 				"url": {
-					"raw": "{{api}}/welcome",
+					"raw": "{{api}}",
 					"host": [
 						"{{api}}"
-					],
-					"path": [
-						"welcome"
 					]
 				}
 			},
