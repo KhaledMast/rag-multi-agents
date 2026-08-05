@@ -2,14 +2,17 @@ from typing import List, Tuple
 from .BaseDataModel import BaseDataModel
 from .db_schemes import Project
 from .enums.DataBaseEnum import DataBaseEnum
+from motor.motor_asyncio import AsyncIOMotorClient
+from pymongo.errors import DuplicateKeyError
+from pymongo import IndexModel
+import math
 
 class ProjectModel(BaseDataModel):
 
-    def __init__(self, db_client: object = None):
+    def __init__(self, db_client: AsyncIOMotorClient):
         super().__init__(db_client=db_client)
-        
-        self.db = self.db_client[self.settings.MONGODB_DATABASE]        
-        self.collection = self.db[DataBaseEnum.COLLECTION_PROJECTS_NAME.value]
+              
+        self.collection = self.db_client[DataBaseEnum.COLLECTION_PROJECTS_NAME.value]
         
 
     async def create_project(self, project: Project) -> Project:
@@ -22,12 +25,15 @@ class ProjectModel(BaseDataModel):
         Returns:
             Project: The newly created project object.
         """
-        project_data = project.model_dump(by_alias=True, exclude_none=True)
+        try:
+            project_data = project.model_dump(by_alias=True, exclude_none=True)
 
-        result = await self.collection.insert_one(project_data)
-        project.id = str(result.inserted_id)  # Set the ID of the project object
+            result = await self.collection.insert_one(project_data)
+            project.id = result.inserted_id  
 
-        return project
+            return project
+        except DuplicateKeyError:
+            raise ValueError(f"Project with id {project.project_id} already exists")
 
     async def get_project_or_create_one(self, project_id: str) -> Project:
         """
@@ -67,7 +73,7 @@ class ProjectModel(BaseDataModel):
         if total_documents == 0:
             return [], 0
 
-        total_pages = total_documents // page_size
+        total_pages = math.ceil(total_documents / page_size)
 
         if total_documents % page_size > 0:
             total_pages += 1

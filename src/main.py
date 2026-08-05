@@ -1,7 +1,8 @@
 from contextlib import asynccontextmanager
 from fastapi import FastAPI
-from pymongo import AsyncMongoClient
+from motor.motor_asyncio import AsyncIOMotorClient
 from helpers.config import get_settings
+from helpers.database import ensure_database_indexes
 from routes import base, data
 
 # Defining the lifecycle (lifespan) to manage the connection
@@ -9,16 +10,23 @@ from routes import base, data
 async def lifespan(app: FastAPI):
     # Code executed at startup
     settings = get_settings()
-    app.state.mongodb_client = AsyncMongoClient(settings.MONGODB_URL)
+    db_client = AsyncIOMotorClient(settings.MONGODB_URL)
+    app.state.mongodb_client = db_client
     app.state.mongodb_database = app.state.mongodb_client[settings.MONGODB_DATABASE]
-    
+
+    # Appel de la configuration d'index centralisée
+    await ensure_database_indexes(db_client, settings.MONGODB_DATABASE)
+
     yield # The application is running here
     
     # Code executed at shutdown
-    app.state.mongodb_client.close()
+    if app.state.mongodb_client is not None:
+        app.state.mongodb_client.close() 
 
 # Initialisation of FastAPI with the lifespan
 app = FastAPI(lifespan=lifespan)
+
+# TODO: Add middleware
 
 # Inclusion of routers
 app.include_router(base.base_router)

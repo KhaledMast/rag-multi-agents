@@ -1,4 +1,4 @@
-from fastapi import FastAPI, APIRouter, Depends, UploadFile, status, Request
+from fastapi import APIRouter, Depends, UploadFile, status, Request
 from fastapi.responses import JSONResponse
 import os
 from helpers.config import get_settings
@@ -10,6 +10,8 @@ from .schemes.data import ProcessRequest
 from models.ProjectModel import ProjectModel
 from models.ChunkModel import ChunkModel
 from models.db_schemes import DataChunk
+from motor.motor_asyncio import AsyncIOMotorClient
+from helpers.database import get_db
 
 logger = logging.getLogger('uvicorn.error')
 
@@ -19,12 +21,12 @@ data_router = APIRouter(
 )
 
 @data_router.post("/upload/{project_id}")
-async def upload_data(request: Request, project_id: str, file: UploadFile, 
+async def upload_data(request: Request, project_id: str, file: UploadFile, db: AsyncIOMotorClient = Depends(get_db),
                       app_settings: get_settings = Depends(get_settings)):
 
 
     project_model = ProjectModel(
-        db_client=request.app.state.mongodb_client
+        db_client=db
     )
 
     project = await project_model.get_project_or_create_one(
@@ -72,7 +74,8 @@ async def upload_data(request: Request, project_id: str, file: UploadFile,
     )
 
 @data_router.post("/process/{project_id}")
-async def process_endpoint(request: Request, project_id: str, process_request: ProcessRequest):
+async def process_endpoint(request: Request, project_id: str, process_request: ProcessRequest,
+                           db: AsyncIOMotorClient = Depends(get_db)):
 
     file_id = process_request.file_id
     chunk_size = process_request.chunk_size
@@ -80,7 +83,7 @@ async def process_endpoint(request: Request, project_id: str, process_request: P
     do_reset = process_request.do_reset
 
     project_model = ProjectModel(
-        db_client=request.app.state.mongodb_client
+        db_client=db
     )
 
     project = await project_model.get_project_or_create_one(
@@ -116,7 +119,7 @@ async def process_endpoint(request: Request, project_id: str, process_request: P
     ]
 
     chunk_model = ChunkModel(
-            db_client=request.app.state.mongodb_client
+            db_client=db
         )
 
     if do_reset == 1:

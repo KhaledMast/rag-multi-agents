@@ -1,6 +1,6 @@
 from typing import Optional
 from pydantic import BaseModel, Field
-from helpers.database import PyObjectId 
+from helpers.fields import PyObjectId
 
 class DataChunk(BaseModel):
     id: Optional[PyObjectId] = Field(None, alias="_id")
@@ -14,3 +14,16 @@ class DataChunk(BaseModel):
         "arbitrary_types_allowed": True,
         "populate_by_name": True
     }
+
+    @classmethod
+    def get_indexes(cls):
+
+        return [
+            {
+                "key": [
+                    ("chunk_project_id", 1)
+                ],
+                "name": "chunk_project_id_index_1",
+                "unique": False
+            }
+        ]

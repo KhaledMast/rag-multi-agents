@@ -1,16 +1,17 @@
-from typing import List, Tuple
+from typing import List
+from pymongo import IndexModel
 from .BaseDataModel import BaseDataModel
 from .db_schemes import DataChunk
 from .enums.DataBaseEnum import DataBaseEnum
-from pymongo import InsertOne
+from motor.motor_asyncio import AsyncIOMotorClient
+from pymongo.errors import DuplicateKeyError
 
 class ChunkModel(BaseDataModel):
 
-    def __init__(self, db_client: object = None):
+    def __init__(self, db_client: AsyncIOMotorClient):
         super().__init__(db_client=db_client)
-        
-        self.db = self.db_client[self.settings.MONGODB_DATABASE]        
-        self.collection = self.db[DataBaseEnum.COLLECTION_CHUNKS_NAME.value]
+               
+        self.collection = self.db_client[DataBaseEnum.COLLECTION_CHUNKS_NAME.value]
 
 
     async def create_chunk(self, chunk: DataChunk) -> DataChunk:
@@ -23,11 +24,14 @@ class ChunkModel(BaseDataModel):
         Returns:
             DataChunk: The newly created data chunk object.
         """
-        chunk_data = chunk.model_dump(by_alias=True, exclude_none=True)
-        result = await self.collection.insert_one(chunk_data)
-        chunk.id = str(result.inserted_id)
+        try:
+            chunk_data = chunk.model_dump(by_alias=True, exclude_none=True)
+            result = await self.collection.insert_one(chunk_data)
+            chunk.id = str(result.inserted_id)
 
-        return chunk
+            return chunk
+        except DuplicateKeyError:
+                    raise ValueError(f"Chunk with id {chunk.chunk_project_id} already exists")
 
     async def get_chunk(self, file_id: str) -> DataChunk:
         """
