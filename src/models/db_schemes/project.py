@@ -1,6 +1,6 @@
 from typing import Optional
 from pydantic import BaseModel, Field, field_validator
-from helpers.database import PyObjectId 
+from helpers.fields import PyObjectId
 
 
 class Project(BaseModel):
@@ -10,10 +10,23 @@ class Project(BaseModel):
     @field_validator('project_id')
     def validate_project_id(cls, v: str) -> str:
         if not v.isalnum():
-            raise AssertionError('project_id must contain only alphanumeric characters')
+            raise ValueError('project_id must contain only alphanumeric characters')
         return v
 
     model_config = {
         "arbitrary_types_allowed": True,
         "populate_by_name": True,
     }
+
+    @classmethod
+    def get_indexes(cls):
+
+        return [
+            {
+                "key": [
+                    ("project_id", 1)
+                ],
+                "name": "project_id_index_1",
+                "unique": True
+            }
+        ]
