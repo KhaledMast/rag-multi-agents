@@ -1,19 +1,22 @@
 from typing import List, Tuple
 from .BaseDataModel import BaseDataModel
+from helpers.config import Settings
 from .db_schemes import Project
 from .enums.DataBaseEnum import DataBaseEnum
 from motor.motor_asyncio import AsyncIOMotorClient
 from pymongo.errors import DuplicateKeyError
-from pymongo import IndexModel
 import math
 
 class ProjectModel(BaseDataModel):
 
-    def __init__(self, db_client: AsyncIOMotorClient):
-        super().__init__(db_client=db_client)
+    def __init__(self, db_client: AsyncIOMotorClient, settings: Settings):
+        super().__init__(db_client=db_client, settings=settings)
               
-        self.collection = self.db_client[DataBaseEnum.COLLECTION_PROJECTS_NAME.value]
-        
+        # self.collection = self.db_client[DataBaseEnum.COLLECTION_PROJECTS_NAME.value]
+
+        self.db = self.db_client[self.settings.MONGODB_DATABASE]
+        self.collection = self.db[DataBaseEnum.COLLECTION_PROJECTS_NAME.value]
+                
 
     async def create_project(self, project: Project) -> Project:
         """
