@@ -10,6 +10,11 @@ logger = logging.getLogger('uvicorn.error')
 async def get_db(request: Request) -> AsyncIOMotorClient:
     return request.app.state.mongodb_database
 
+
+async def get_db_client(request: Request) -> AsyncIOMotorClient:
+    return request.app.state.mongodb_client
+
+
 # The global index initialization function
 async def ensure_database_indexes(db_client: AsyncIOMotorClient, database_name: str):
     """

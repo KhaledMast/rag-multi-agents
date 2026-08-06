@@ -2,6 +2,7 @@ from fastapi import APIRouter, Depends, UploadFile, status, Request
 from fastapi.responses import JSONResponse
 import os
 from helpers.config import get_settings
+from helpers.config import Settings
 from controllers import DataController, ProjectController, ProcessController
 import aiofiles
 from models import ResponseSignal
@@ -12,7 +13,7 @@ from models.ChunkModel import ChunkModel
 from models.AssetModel import AssetModel
 from models.db_schemes import DataChunk, Asset
 from motor.motor_asyncio import AsyncIOMotorClient
-from helpers.database import get_db
+from helpers.database import get_db_client
 from models.enums.AssetTypeEnum import AssetTypeEnum
 
 logger = logging.getLogger('uvicorn.error')
@@ -23,12 +24,15 @@ data_router = APIRouter(
 )
 
 @data_router.post("/upload/{project_id}")
-async def upload_data(request: Request, project_id: str, file: UploadFile, db: AsyncIOMotorClient = Depends(get_db),
-                      app_settings: get_settings = Depends(get_settings)):
-
+async def upload_data(request: Request, 
+                      project_id: str, 
+                      file: UploadFile, 
+                      db_client: AsyncIOMotorClient = Depends(get_db_client),
+                      app_settings: Settings = Depends(get_settings)):
 
     project_model = ProjectModel(
-        db_client=db
+        db_client=db_client,
+        settings=app_settings
     )
 
     project = await project_model.get_project_or_create_one(
@@ -69,7 +73,8 @@ async def upload_data(request: Request, project_id: str, file: UploadFile, db: A
         )
 
     asset_model = AssetModel(
-        db_client=db
+        db_client=db_client,
+        settings=app_settings
     )
 
     asset_resource = Asset(
@@ -91,15 +96,19 @@ async def upload_data(request: Request, project_id: str, file: UploadFile, db: A
     )
 
 @data_router.post("/process/{project_id}")
-async def process_endpoint(request: Request, project_id: str, process_request: ProcessRequest,
-                           db: AsyncIOMotorClient = Depends(get_db)):
+async def process_endpoint(request: Request, 
+                           project_id: str, 
+                           process_request: ProcessRequest,
+                           db_client: AsyncIOMotorClient = Depends(get_db_client),
+                           app_settings: Settings = Depends(get_settings)):
 
     chunk_size = process_request.chunk_size
     overlap_size = process_request.overlap_size
     do_reset = process_request.do_reset
 
     project_model = ProjectModel(
-        db_client=db
+        db_client=db_client,
+        settings=app_settings
     )
 
     project = await project_model.get_project_or_create_one(
@@ -107,7 +116,8 @@ async def process_endpoint(request: Request, project_id: str, process_request: P
     )
 
     asset_model = AssetModel(
-        db_client=db
+        db_client=db_client,
+        settings=app_settings
     )
 
     project_files_ids = {}
@@ -151,7 +161,8 @@ async def process_endpoint(request: Request, project_id: str, process_request: P
     process_controller = ProcessController(project_id=project_id)
 
     chunk_model = ChunkModel(
-        db_client=db
+        db_client=db_client,
+        settings=app_settings
     )
 
     if do_reset == 1:

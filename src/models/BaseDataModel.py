@@ -1,7 +1,8 @@
-from helpers.config import get_settings
+from helpers.config import Settings
 from motor.motor_asyncio import AsyncIOMotorClient
 
 class BaseDataModel:
-    def __init__(self, db_client: AsyncIOMotorClient):
-        self.settings = get_settings()
+    def __init__(self, db_client: AsyncIOMotorClient, settings: Settings):
         self.db_client = db_client
+        self.settings = settings
+        

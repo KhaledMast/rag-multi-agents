@@ -1,16 +1,20 @@
 from typing import List
 from .BaseDataModel import BaseDataModel
 from .db_schemes import DataChunk
+from helpers.config import Settings
 from .enums.DataBaseEnum import DataBaseEnum
 from motor.motor_asyncio import AsyncIOMotorClient
 from pymongo.errors import DuplicateKeyError
 
 class ChunkModel(BaseDataModel):
 
-    def __init__(self, db_client: AsyncIOMotorClient):
-        super().__init__(db_client=db_client)
+    def __init__(self, db_client: AsyncIOMotorClient, settings: Settings):
+        super().__init__(db_client=db_client, settings=settings)
                
-        self.collection = self.db_client[DataBaseEnum.COLLECTION_CHUNKS_NAME.value]
+        # self.collection = self.db_client[DataBaseEnum.COLLECTION_CHUNKS_NAME.value]
+
+        self.db = self.db_client[self.settings.MONGODB_DATABASE]
+        self.collection = self.db[DataBaseEnum.COLLECTION_CHUNKS_NAME.value]
 
 
     async def create_chunk(self, chunk: DataChunk) -> DataChunk:
