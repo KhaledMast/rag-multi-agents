@@ -8,6 +8,7 @@ class DataChunk(BaseModel):
     chunk_metadata: dict = Field(default_factory=dict, description="metadata associated with the data chunk.")
     chunk_order: int = Field(None, gt=0, description="The order of the chunk in the original document.")
     chunk_project_id: str = Field(None, description="The unique identifier for the project.")
+    chunk_asset_id: str = Field(None, description="The unique identifier for the asset.")
 
 
     model_config = {

@@ -1,5 +1,4 @@
 from typing import List
-from pymongo import IndexModel
 from .BaseDataModel import BaseDataModel
 from .db_schemes import DataChunk
 from .enums.DataBaseEnum import DataBaseEnum

@@ -4,7 +4,6 @@ from .db_schemes import Project
 from .enums.DataBaseEnum import DataBaseEnum
 from motor.motor_asyncio import AsyncIOMotorClient
 from pymongo.errors import DuplicateKeyError
-from pymongo import IndexModel
 import math
 
 class ProjectModel(BaseDataModel):
