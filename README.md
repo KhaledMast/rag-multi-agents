@@ -16,7 +16,7 @@ conda install -c conda-forge uv
 ```
 3) Activate the environment:
 ```bash
-$ conda activate rag-multi-agents
+$ conda activate rag-multi-agents-app
 ```
 
 ### (Optional) Setup you command line interface for better readability

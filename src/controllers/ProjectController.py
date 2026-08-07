@@ -1,11 +1,10 @@
 from .BaseController import BaseController
-from fastapi import UploadFile
-from models import ResponseSignal
+from helpers.config import Settings
 import os
 
 class ProjectController(BaseController):
 
-    def __init__(self):
+    def __init__(self, settings: Settings):
         super().__init__()
 
 
