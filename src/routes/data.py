@@ -1,9 +1,8 @@
 from fastapi import APIRouter, Depends, UploadFile, status, Request
 from fastapi.responses import JSONResponse
 import os
-from helpers.config import get_settings
-from helpers.config import Settings
-from controllers import DataController, ProjectController, ProcessController
+from helpers.config import get_settings, Settings
+from controllers import DataController, ProcessController
 import aiofiles
 from models import ResponseSignal
 import logging
@@ -40,7 +39,7 @@ async def upload_data(request: Request,
     )
 
     #Validate file
-    data_controller = DataController()
+    data_controller = DataController(settings=app_settings)
     is_valid, result_signal = data_controller.check_upload(file=file)
 
     if not is_valid:
@@ -51,7 +50,6 @@ async def upload_data(request: Request,
             }
         )
 
-    project_path = ProjectController().get_project_path(project_id=project_id)
     file_path, file_id = data_controller.generate_unique_file_path(
         original_file_name=file.filename,
         project_id=project_id
@@ -158,7 +156,7 @@ async def process_endpoint(request: Request,
             }
         )
     
-    process_controller = ProcessController(project_id=project_id)
+    process_controller = ProcessController(project_id=project_id, settings=app_settings)
 
     chunk_model = ChunkModel(
         db_client=db_client,

@@ -1,5 +1,6 @@
 from .BaseController import BaseController
 from .ProjectController import ProjectController
+from helpers.config import Settings
 from fastapi import UploadFile
 from models import ResponseSignal
 import re
@@ -7,9 +8,11 @@ import os
 
 class DataController(BaseController):
 
-    def __init__(self):
+    def __init__(self, settings: Settings):
         super().__init__()
+        self.app_settings = settings
         self.size_scale = 1024 * 1024  # Convert MB to bytes
+        self.project = ProjectController(settings=settings)
 
 
     def check_upload(self, file: UploadFile):
@@ -27,7 +30,7 @@ class DataController(BaseController):
     def generate_unique_file_path(self, original_file_name: str, project_id: str) -> str:
 
         random_key = self.generate_random_string()
-        project_path = ProjectController().get_project_path(project_id=project_id)
+        project_path = self.project.get_project_path(project_id=project_id)
 
         cleaned_file_name = self.get_cleaned_file_name(
             original_file_name = original_file_name
