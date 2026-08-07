@@ -4,6 +4,7 @@ from motor.motor_asyncio import AsyncIOMotorClient
 from helpers.config import get_settings
 from helpers.database import ensure_database_indexes
 from routes import base, data
+from stores.llm.LLMProviderFactory import LLMProviderFactory
 
 # Defining the lifecycle (lifespan) to manage the connection
 @asynccontextmanager
@@ -14,8 +15,11 @@ async def lifespan(app: FastAPI):
     app.state.mongodb_client = db_client
     app.state.mongodb_database = app.state.mongodb_client[settings.MONGODB_DATABASE]
 
-    # Appel de la configuration d'index centralisée
+    # Calling the centralized index configuration
     await ensure_database_indexes(db_client, settings.MONGODB_DATABASE)
+
+    # LLM Factory
+    app.state.llm_factory = LLMProviderFactory(settings)
 
     yield # The application is running here
     
