@@ -3,7 +3,7 @@ from fastapi import FastAPI
 from motor.motor_asyncio import AsyncIOMotorClient
 from helpers.config import get_settings
 from helpers.database import ensure_database_indexes
-from routes import base, data
+from routes import base, data, nlp
 from stores.llm.LLMProviderFactory import LLMProviderFactory
 from stores.vectordb.VectorDBProviderFactory import VectorDBProviderFactory
 
@@ -70,3 +70,4 @@ app = FastAPI(lifespan=lifespan)
 # Inclusion of routers
 app.include_router(base.base_router)
 app.include_router(data.data_router)
+app.include_router(nlp.nlp_router)

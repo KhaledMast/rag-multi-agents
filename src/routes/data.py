@@ -1,19 +1,18 @@
 from fastapi import APIRouter, Depends, UploadFile, status, Request
 from fastapi.responses import JSONResponse
-import os
 from helpers.config import get_settings, Settings
+from helpers.database import get_db_client
 from controllers import DataController, ProcessController
-import aiofiles
 from models import ResponseSignal
-import logging
 from .schemes.data import ProcessRequest
 from models.ProjectModel import ProjectModel
 from models.ChunkModel import ChunkModel
 from models.AssetModel import AssetModel
 from models.db_schemes import DataChunk, Asset
 from motor.motor_asyncio import AsyncIOMotorClient
-from helpers.database import get_db_client
 from models.enums.AssetTypeEnum import AssetTypeEnum
+
+import logging, os, aiofiles
 
 logger = logging.getLogger('uvicorn.error')
 

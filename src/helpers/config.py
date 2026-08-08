@@ -31,6 +31,10 @@ class Settings(BaseSettings):
     VECTOR_DB_PATH : str
     VECTOR_DB_DISTANCE_METHOD: str = None
 
+    DEFAULT_LANG : str
+    PRIMARY_LANG : str
+    SECONDARY_LANG : str
+
     # Note: In Pydantic v2, we use model_config rather than class Config
     model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8")
 
