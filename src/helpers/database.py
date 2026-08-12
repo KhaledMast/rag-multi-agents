@@ -3,9 +3,8 @@ from pymongo import IndexModel
 from motor.motor_asyncio import AsyncIOMotorClient
 from fastapi import Request
 from models.db_schemes import Project, DataChunk, Asset
-from stores.vectordb.providers import QdrantDBProvider
 from models.enums.DataBaseEnum import DataBaseEnum
-from stores.llm.LLMInterface import LLMInterface
+
 
 logger = logging.getLogger('uvicorn.error')
 
@@ -17,15 +16,6 @@ async def get_db(request: Request) -> AsyncIOMotorClient:
 async def get_db_client(request: Request) -> AsyncIOMotorClient:
     return request.app.state.mongodb_client
 
-# Qdrant
-def get_vectordb_client(request: Request) -> QdrantDBProvider:
-    return request.app.state.vectordb_client
-
-def get_generation_client(request: Request) -> LLMInterface:
-    return request.app.state.generation_client
-
-def get_embedding_client(request: Request) -> LLMInterface:
-    return request.app.state.embedding_client
 
 # The global index initialization function
 async def ensure_database_indexes(db_client: AsyncIOMotorClient, database_name: str):

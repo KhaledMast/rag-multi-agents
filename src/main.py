@@ -6,6 +6,7 @@ from helpers.database import ensure_database_indexes
 from routes import base, data, nlp
 from stores.llm.LLMProviderFactory import LLMProviderFactory
 from stores.vectordb.VectorDBProviderFactory import VectorDBProviderFactory
+from stores.llm.templates.template_parser import TemplateParser
 
 # Defining the lifecycle (lifespan) to manage the connection
 @asynccontextmanager
@@ -52,6 +53,10 @@ async def lifespan(app: FastAPI):
 
     if app.state.vectordb_client is not None:
         app.state.vectordb_client.connect()
+
+    app.state.template_parser = TemplateParser(
+        language=settings.DEFAULT_LANG
+    ) 
 
     yield # The application is running here
     
