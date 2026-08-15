@@ -54,9 +54,7 @@ async def lifespan(app: FastAPI):
     if app.state.vectordb_client is not None:
         app.state.vectordb_client.connect()
 
-    app.state.template_parser = TemplateParser(
-        language=settings.DEFAULT_LANG
-    ) 
+    app.state.template_parser = TemplateParser() 
 
     yield # The application is running here
     

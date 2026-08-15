@@ -2,6 +2,7 @@ from .BaseController import BaseController
 from models.db_schemes import Project, DataChunk
 from stores.llm.LLMEnums import DocumentTypeEnum
 from typing import List
+from langdetect import detect
 import json
 
 class NLPController(BaseController):
@@ -87,7 +88,10 @@ class NLPController(BaseController):
     def answer_rag_question(self, project: Project, query: str, limit: int = 10):
         
         answer, full_prompt, chat_history = None, None, None
-        
+
+        result = detect(query)
+        detected_lang = result if result is not None else "fr"
+
         retrieved_documents = self.search_vector_db_collection(
             project=project,
             text=query,
@@ -98,17 +102,24 @@ class NLPController(BaseController):
             return answer, full_prompt, chat_history
         
         
-        system_prompt = self.template_parser.get("rag", "system_prompt")
+        system_prompt = self.template_parser.get("rag", "system_prompt", detected_lang)
 
-        documents_prompts = "\n".join([
-            self.template_parser.get("rag", "document_prompt", {
-                    "doc_num": idx + 1,
-                    "chunk_text": doc.text,
-            })
-            for idx, doc in enumerate(retrieved_documents)
-        ])
+        # documents_prompts = "\n".join([
+        #     self.template_parser.get("rag", "document_prompt", {
+        #             "doc_num": idx + 1,
+        #             "chunk_text": doc.text,
+        #     })
+        #     for idx, doc in enumerate(retrieved_documents)
+        # ])
 
-        footer_prompt = self.template_parser.get("rag", "footer_prompt",{
+        documents_prompts = self.template_parser.get("rag", "document_prompt", detected_lang, {
+            "documents": [
+                {"num": idx + 1, "chunk_text": doc.text}
+                for idx, doc in enumerate(retrieved_documents)
+            ]
+        })
+
+        footer_prompt = self.template_parser.get("rag", "footer_prompt", detected_lang,{
             "query": query
         })
 
