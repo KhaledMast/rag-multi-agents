@@ -21,16 +21,16 @@ class LLMProviderFactory:
         return OpenAIProvider(
             api_key=self.app_settings.OPENAI_API_KEY,
             api_url=self.app_settings.OPENAI_API_URL,
-            default_input_max_characters=self.app_settings.INPUT_DAFAULT_MAX_CHARACTERS,
-            default_generation_max_output_tokens=self.app_settings.GENERATION_DAFAULT_MAX_TOKENS,
-            default_generation_temperature=self.app_settings.GENERATION_DAFAULT_TEMPERATURE,
+            default_input_max_characters=self.app_settings.INPUT_DEFAULT_MAX_CHARACTERS,
+            default_generation_max_output_tokens=self.app_settings.GENERATION_DEFAULT_MAX_TOKENS,
+            default_generation_temperature=self.app_settings.GENERATION_DEFAULT_TEMPERATURE,
         )
 
     def _create_cohere(self):
         return CoHereProvider(
             api_key=self.app_settings.COHERE_API_KEY,
-            default_input_max_characters=self.app_settings.INPUT_DAFAULT_MAX_CHARACTERS,
-            default_generation_max_output_tokens=self.app_settings.GENERATION_DAFAULT_MAX_TOKENS,
-            default_generation_temperature=self.app_settings.GENERATION_DAFAULT_TEMPERATURE,
+            default_input_max_characters=self.app_settings.INPUT_DEFAULT_MAX_CHARACTERS,
+            default_generation_max_output_tokens=self.app_settings.GENERATION_DEFAULT_MAX_TOKENS,
+            default_generation_temperature=self.app_settings.GENERATION_DEFAULT_TEMPERATURE,
         )
     

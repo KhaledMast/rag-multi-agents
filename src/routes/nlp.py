@@ -1,3 +1,4 @@
+import logging
 from fastapi import APIRouter, Depends, status, Request
 from fastapi.responses import JSONResponse
 from routes.schemes.nlp import PushRequest, SearchRequest
@@ -6,14 +7,17 @@ from models.ChunkModel import ChunkModel
 from controllers import NLPController
 from helpers.config import get_settings, Settings
 from helpers.database import get_db_client
-from stores.vectordb.vectordb_dependencies import get_vectordb_client, get_generation_client, get_embedding_client
 from stores.llm.LLMInterface import LLMInterface
 from motor.motor_asyncio import AsyncIOMotorClient
 from stores.vectordb.providers import QdrantDBProvider
 from dependencies import get_template_parser
 from stores.llm.templates.template_parser import TemplateParser
 from models import ResponseSignal
-import logging
+
+from dependencies import (
+    get_project_model,
+    get_chunk_model,
+    get_nlp_controller)
 
 logger = logging.getLogger('uvicorn.error')
 
@@ -24,28 +28,16 @@ nlp_router = APIRouter(
 
 
 @nlp_router.post("/index/push/{project_id}")
-async def index_project(request: Request, 
-                        project_id: str, 
+async def index_project(project_id: str, 
                         push_request: PushRequest,
-                        db_client: AsyncIOMotorClient = Depends(get_db_client),
-                        vectordb_client: QdrantDBProvider = Depends(get_vectordb_client),
-                        generation_client: LLMInterface = Depends(get_generation_client),
-                        embedding_client: LLMInterface = Depends(get_embedding_client),
-                        template_parser: TemplateParser = Depends(get_template_parser),
-                        app_settings: Settings = Depends(get_settings)):
+                        project_model: ProjectModel = Depends(get_project_model),
+                        chunk_model: ChunkModel = Depends(get_chunk_model),
+                        nlp_controller: NLPController = Depends(get_nlp_controller)):
 
-    project_model = ProjectModel(
-        db_client=db_client,
-        settings=app_settings
-    )
+    
 
     project = await project_model.get_project_or_create_one(
         project_id=project_id
-    )
-
-    chunk_model = ChunkModel(
-        db_client=db_client,
-        settings=app_settings
     )
 
     if not project:
@@ -55,13 +47,6 @@ async def index_project(request: Request,
                 "signal": ResponseSignal.PROJECT_NOT_FOUND_ERROR.value
             }
         )
-
-    nlp_controller = NLPController(
-        vectordb_client=vectordb_client,
-        generation_client=generation_client,
-        embedding_client=embedding_client,
-        template_parser=template_parser
-    )
 
     has_records = True
     page_no = 1
@@ -105,19 +90,10 @@ async def index_project(request: Request,
     )
 
 @nlp_router.get("/index/info/{project_id}")
-async def get_project_index_info(request: Request, 
-                                 project_id: str,
-                                 db_client: AsyncIOMotorClient = Depends(get_db_client),
-                                 vectordb_client: QdrantDBProvider = Depends(get_vectordb_client),
-                                 generation_client: LLMInterface = Depends(get_generation_client),
-                                 embedding_client: LLMInterface = Depends(get_embedding_client),
-                                 template_parser: TemplateParser = Depends(get_template_parser),
-                                 app_settings: Settings = Depends(get_settings)):
+async def get_project_index_info(project_id: str,
+                                 project_model: ProjectModel = Depends(get_project_model),
+                                 nlp_controller: NLPController = Depends(get_nlp_controller)):
 
-    project_model = ProjectModel(
-        db_client=db_client,
-        settings=app_settings
-    )
 
     project = await project_model.get_project_or_create_one(
         project_id=project_id
@@ -131,12 +107,6 @@ async def get_project_index_info(request: Request,
             }
         )
 
-    nlp_controller = NLPController(
-        vectordb_client=vectordb_client,
-        generation_client=generation_client,
-        embedding_client=embedding_client,
-        template_parser=template_parser
-    )
 
     collection_info = nlp_controller.get_vector_db_collection_info(project=project)
 
@@ -148,24 +118,13 @@ async def get_project_index_info(request: Request,
     )
 
 @nlp_router.post("/index/search/{project_id}")
-async def search_index(request: Request, 
-                       project_id: str, 
+async def search_index(project_id: str, 
                        search_request: SearchRequest,
-                       db_client: AsyncIOMotorClient = Depends(get_db_client),
-                       vectordb_client: QdrantDBProvider = Depends(get_vectordb_client),
-                       generation_client: LLMInterface = Depends(get_generation_client),
-                       embedding_client: LLMInterface = Depends(get_embedding_client),
-                       template_parser: TemplateParser = Depends(get_template_parser),
-                       app_settings: Settings = Depends(get_settings)):
+                       project_model: ProjectModel = Depends(get_project_model),
+                       nlp_controller: NLPController = Depends(get_nlp_controller)):
     
-    project_model = ProjectModel(
-        db_client=db_client,
-        settings=app_settings
-    )
 
-    project = await project_model.get_project_or_create_one(
-        project_id=project_id
-    )
+    project = await project_model.get_project_or_create_one(project_id=project_id)
 
     if not project:
         return JSONResponse(
@@ -175,16 +134,8 @@ async def search_index(request: Request,
             }
         )
 
-    nlp_controller = NLPController(
-        vectordb_client=vectordb_client,
-        generation_client=generation_client,
-        embedding_client=embedding_client,
-        template_parser=template_parser
-    )
 
-    results = nlp_controller.search_vector_db_collection(
-        project=project, text=search_request.text, limit=search_request.limit
-    )
+    results = nlp_controller.search_vector_db_collection(project=project, text=search_request.text, limit=search_request.limit)
 
     if not results:
         return JSONResponse(
@@ -202,25 +153,13 @@ async def search_index(request: Request,
     )
 
 @nlp_router.post("/index/answer/{project_id}")
-async def answer_rag(request: Request, 
-                     project_id: str, 
+async def answer_rag(project_id: str, 
                      search_request: SearchRequest,
-                     db_client: AsyncIOMotorClient = Depends(get_db_client),
-                     vectordb_client: QdrantDBProvider = Depends(get_vectordb_client),
-                     generation_client: LLMInterface = Depends(get_generation_client),
-                     embedding_client: LLMInterface = Depends(get_embedding_client),
-                     template_parser: TemplateParser = Depends(get_template_parser),
-                     app_settings: Settings = Depends(get_settings)):
+                     project_model: ProjectModel = Depends(get_project_model),
+                     nlp_controller: NLPController = Depends(get_nlp_controller)):
     
-
-    project_model = ProjectModel(
-        db_client=db_client,
-        settings=app_settings
-    )
-
-    project = await project_model.get_project_or_create_one(
-        project_id=project_id
-    )
+    
+    project = await project_model.get_project_or_create_one(project_id=project_id)
 
     if not project:
         return JSONResponse(
@@ -230,12 +169,6 @@ async def answer_rag(request: Request,
             }
         )
 
-    nlp_controller = NLPController(
-        vectordb_client=vectordb_client,
-        generation_client=generation_client,
-        embedding_client=embedding_client,
-        template_parser=template_parser
-    )
 
     answer, full_prompt, chat_history = nlp_controller.answer_rag_question(
         project=project,
