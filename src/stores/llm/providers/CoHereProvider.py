@@ -25,6 +25,7 @@ class CoHereProvider(LLMInterface):
         # TODO Client --> ClientV2
         self.client = cohere.Client(api_key=self.api_key)
 
+        self.enums = CoHereEnums
         self.logger = logging.getLogger(__name__)
 
 
@@ -86,7 +87,7 @@ class CoHereProvider(LLMInterface):
 
         response = self.client.embed(
             model=self.embedding_model_id,
-            texts=[self.construct_prompt(text)],
+            texts=[self.process_text(text)],
             input_type=input_type,
             embedding_types=['float']
         )

@@ -5,8 +5,10 @@ from fastapi import Request
 from models.db_schemes import Project, DataChunk, Asset
 from models.enums.DataBaseEnum import DataBaseEnum
 
+
 logger = logging.getLogger('uvicorn.error')
 
+# Mongo
 async def get_db(request: Request) -> AsyncIOMotorClient:
     return request.app.state.mongodb_database
 

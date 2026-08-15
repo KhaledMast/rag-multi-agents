@@ -1,19 +1,21 @@
+import logging, os, aiofiles
 from fastapi import APIRouter, Depends, UploadFile, status, Request
 from fastapi.responses import JSONResponse
-import os
 from helpers.config import get_settings, Settings
 from controllers import DataController, ProcessController
-import aiofiles
 from models import ResponseSignal
-import logging
 from .schemes.data import ProcessRequest
-from models.ProjectModel import ProjectModel
-from models.ChunkModel import ChunkModel
-from models.AssetModel import AssetModel
+from models import ProjectModel, ChunkModel, AssetModel
 from models.db_schemes import DataChunk, Asset
-from motor.motor_asyncio import AsyncIOMotorClient
-from helpers.database import get_db_client
 from models.enums.AssetTypeEnum import AssetTypeEnum
+
+from dependencies import (
+    get_project_model, 
+    get_asset_model, 
+    get_chunk_model, 
+    get_process_controller, 
+    get_data_controller)
+
 
 logger = logging.getLogger('uvicorn.error')
 
@@ -23,23 +25,19 @@ data_router = APIRouter(
 )
 
 @data_router.post("/upload/{project_id}")
-async def upload_data(request: Request, 
-                      project_id: str, 
+async def upload_data(project_id: str, 
                       file: UploadFile, 
-                      db_client: AsyncIOMotorClient = Depends(get_db_client),
+                      project_model: ProjectModel = Depends(get_project_model),
+                      asset_model: AssetModel = Depends(get_asset_model),
+                      data_controller: DataController = Depends(get_data_controller),
                       app_settings: Settings = Depends(get_settings)):
 
-    project_model = ProjectModel(
-        db_client=db_client,
-        settings=app_settings
-    )
 
     project = await project_model.get_project_or_create_one(
         project_id=project_id
     )
 
     #Validate file
-    data_controller = DataController(settings=app_settings)
     is_valid, result_signal = data_controller.check_upload(file=file)
 
     if not is_valid:
@@ -70,11 +68,6 @@ async def upload_data(request: Request,
             }
         )
 
-    asset_model = AssetModel(
-        db_client=db_client,
-        settings=app_settings
-    )
-
     asset_resource = Asset(
         asset_project_id=project.id,
         asset_type=AssetTypeEnum.FILE.value,
@@ -94,29 +87,21 @@ async def upload_data(request: Request,
     )
 
 @data_router.post("/process/{project_id}")
-async def process_endpoint(request: Request, 
-                           project_id: str, 
+async def process_endpoint(project_id: str, 
                            process_request: ProcessRequest,
-                           db_client: AsyncIOMotorClient = Depends(get_db_client),
-                           app_settings: Settings = Depends(get_settings)):
+                           project_model: ProjectModel = Depends(get_project_model),
+                           asset_model: AssetModel = Depends(get_asset_model),
+                           chunk_model: ChunkModel = Depends(get_chunk_model),
+                           process_controller: ProcessController = Depends(get_process_controller)):
 
     chunk_size = process_request.chunk_size
     overlap_size = process_request.overlap_size
     do_reset = process_request.do_reset
 
-    project_model = ProjectModel(
-        db_client=db_client,
-        settings=app_settings
-    )
-
     project = await project_model.get_project_or_create_one(
         project_id=project_id
     )
 
-    asset_model = AssetModel(
-        db_client=db_client,
-        settings=app_settings
-    )
 
     project_files_ids = {}
     if process_request.file_id:
@@ -156,13 +141,6 @@ async def process_endpoint(request: Request,
             }
         )
     
-    process_controller = ProcessController(project_id=project_id, settings=app_settings)
-
-    chunk_model = ChunkModel(
-        db_client=db_client,
-        settings=app_settings
-    )
-
     if do_reset == 1:
         _= await chunk_model.delete_chunks_by_project_id(
             project_id=str(project.id)

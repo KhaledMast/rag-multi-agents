@@ -23,11 +23,18 @@ class OpenAIProvider(LLMInterface):
         self.embedding_model_id = None
         self.embedding_size = None
 
+        # OpenAI
+        # self.client = OpenAI(
+        #     api_key = self.api_key,
+        # )
+
+        # Gemini
         self.client = OpenAI(
             api_key = self.api_key,
-            # api_url = self.api_url
+            base_url = self.api_url
         )
 
+        self.enums = OpenAIEnums
         self.logger = logging.getLogger(__name__)
 
 
@@ -40,8 +47,11 @@ class OpenAIProvider(LLMInterface):
         self.embedding_size = embedding_size  
 
 
-    def process_text(self, text:str):
-        return text[:self.default_input_max_characters].strip()
+    def process_text(self, text: str, max_characters: int = None):
+        max_characters = max_characters if max_characters is not None else self.default_input_max_characters
+        if max_characters <= 0:  # 0 ou None désactive la troncature
+            return text.strip()
+        return text[:max_characters].strip()
 
 
     def generate_text(self, prompt: str, chat_history: list=[], max_output_tokens: int=None,
@@ -58,8 +68,9 @@ class OpenAIProvider(LLMInterface):
         max_output_tokens = max_output_tokens if max_output_tokens else self.default_generation_max_output_tokens
         temperature = temperature if temperature else self.default_generation_temperature
 
+
         chat_history.append(
-            self.construct_prompt(prompt=prompt, role=OpenAIEnums.USER.value)
+            self.construct_prompt(prompt=prompt, role=OpenAIEnums.USER.value, truncate=False)
         )
 
         # TODO Chat Completions --> API	Responses API
@@ -70,11 +81,15 @@ class OpenAIProvider(LLMInterface):
             temperature=temperature
         )
 
+        print(f"finish_reason: {response.choices[0].finish_reason}")
+        print(f"usage: {response.usage}")
+
+
         if not response or not response.choices or len(response.choices) == 0 or not response.choices[0].message:
             self.logger.error("Error while generating text with OpenAI")
             return None
 
-        return response.choices[0].message["content"]
+        return response.choices[0].message.content
     
         
     def embed_text(self, text: str, document_type: str=None):
@@ -99,8 +114,8 @@ class OpenAIProvider(LLMInterface):
         return response.data[0].embedding
 
     
-    def construct_prompt(self, prompt: str, role: str):
+    def construct_prompt(self, prompt: str, role: str, truncate: bool = True):
         return {
             "role": role,
-            "content": self.process_text(prompt)
+            "content": self.process_text(prompt) if truncate else prompt.strip()
         }
