@@ -1,56 +1,74 @@
 import logging
 from contextlib import asynccontextmanager
+
 from fastapi import FastAPI
-from motor.motor_asyncio import AsyncIOMotorClient
+
+from app_state import AppState
 from helpers.config import get_settings
 from helpers.database import ensure_database_indexes
+from motor.motor_asyncio import AsyncIOMotorClient
+from services.file_storage_service import FileStorageService
 from stores.llm.LLMProviderFactory import LLMProviderFactory
-from stores.vectordb.VectorDBProviderFactory import VectorDBProviderFactory
 from stores.llm.templates.template_parser import TemplateParser
+from stores.vectordb.VectorDBProviderFactory import VectorDBProviderFactory
 
-logger = logging.getLogger('uvicorn.error')
+logger = logging.getLogger("uvicorn.error")
+
+
+class AppLifespan:
+
+    async def build_state(self) -> AppState:
+        settings = get_settings()
+
+        storage_service = FileStorageService()
+
+        mongodb_client = AsyncIOMotorClient(settings.MONGODB_URL)
+        mongodb_database = mongodb_client[settings.MONGODB_DATABASE]
+        await ensure_database_indexes(mongodb_client, settings.MONGODB_DATABASE)
+
+        llm_provider_factory = LLMProviderFactory(settings)
+
+        generation_client = llm_provider_factory.create(provider=settings.GENERATION_BACKEND)
+        generation_client.set_generation_model(model_id=settings.GENERATION_MODEL_ID)
+
+        embedding_client = llm_provider_factory.create(provider=settings.EMBEDDING_BACKEND)
+        embedding_client.set_embedding_model(
+            model_id=settings.EMBEDDING_MODEL_ID,
+            embedding_size=settings.EMBEDDING_MODEL_SIZE,
+        )
+
+        vectordb_provider_factory = VectorDBProviderFactory(
+            storage_service=storage_service,
+            settings=settings,
+        )
+        vectordb_client = vectordb_provider_factory.create(provider=settings.VECTOR_DB_BACKEND)
+        if vectordb_client is not None:
+            vectordb_client.connect()
+
+        template_parser = TemplateParser()
+
+        return AppState(
+            storage_service=storage_service,
+            mongodb_client=mongodb_client,
+            mongodb_database=mongodb_database,
+            generation_client=generation_client,
+            embedding_client=embedding_client,
+            vectordb_client=vectordb_client,
+            template_parser=template_parser,
+        )
+
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # Code executed at startup
-    settings = get_settings()
+    manager = AppLifespan()
 
-    # MongoDB client & DB
-    db_client = AsyncIOMotorClient(settings.MONGODB_URL)
-    app.state.mongodb_client = db_client
-    app.state.mongodb_database = db_client[settings.MONGODB_DATABASE]
-    await ensure_database_indexes(db_client, settings.MONGODB_DATABASE)
+    try:
+        app.state.app_state = await manager.build_state()
+    except Exception as e:
+        logger.error(f"Critical error occurred while starting the application: {e}")
+        raise
 
-    # LLM Factory & Clients
-    llm_provider_factory = LLMProviderFactory(settings)
-    app.state.llm_factory = llm_provider_factory
+    yield
 
-    app.state.generation_client = llm_provider_factory.create(provider=settings.GENERATION_BACKEND)
-    app.state.generation_client.set_generation_model(model_id=settings.GENERATION_MODEL_ID)
-
-    app.state.embedding_client = llm_provider_factory.create(provider=settings.EMBEDDING_BACKEND)
-    app.state.embedding_client.set_embedding_model(
-        model_id=settings.EMBEDDING_MODEL_ID,
-        embedding_size=settings.EMBEDDING_MODEL_SIZE
-    )
-
-    # VectorDB Factory & Client
-    vectordb_provider_factory = VectorDBProviderFactory(settings)
-    app.state.vectorDB_factory = vectordb_provider_factory
-    app.state.vectordb_client = vectordb_provider_factory.create(provider=settings.VECTOR_DB_BACKEND)
-
-    if app.state.vectordb_client is not None:
-        app.state.vectordb_client.connect()
-
-    app.state.template_parser = TemplateParser() 
-
-    yield 
-    
-    # Code executed at shutdown
-    if getattr(app.state, "mongodb_client", None) is not None:
-        app.state.mongodb_client.close() 
-
-    if getattr(app.state, "vectordb_client", None) is not None:
-        app.state.vectordb_client.disconnect()
-    
+    await app.state.app_state.shutdown()
     logger.info("Application shut down cleanly.")

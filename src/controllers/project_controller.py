@@ -1,16 +1,15 @@
-from .BaseController import BaseController
-from helpers.config import Settings
 import os
+from services.file_storage_service import FileStorageService
 
-class ProjectController(BaseController):
+class ProjectController:
 
-    def __init__(self, settings: Settings):
-        super().__init__()
+    def __init__(self, storage_service: FileStorageService):
+        self.storage = storage_service
 
 
     def get_project_path(self, project_id: str):
         project_dir = os.path.join(
-            self.files_dir, 
+            self.storage.files_dir, 
             project_id
         )
 

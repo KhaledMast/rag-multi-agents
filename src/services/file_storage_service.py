@@ -1,9 +1,8 @@
-from helpers.config import Settings
-import os, random, string
+import os
 
-class BaseController:
+class FileStorageService:
 
-    def __init__(self, settings: Settings | None = None):
+    def __init__(self):
         
         self.base_path = os.path.dirname(os.path.dirname(__file__))
         self.files_dir = os.path.join(
@@ -15,9 +14,7 @@ class BaseController:
             self.base_path,
             "assets/database"
         )
-
-    def generate_random_string(self, length: int = 12) -> str:
-        return ''.join(random.choices(string.ascii_lowercase + string.digits, k=length))    
+ 
 
     def get_database_path(self, db_name: str):
 

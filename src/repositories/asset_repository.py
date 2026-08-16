@@ -1,11 +1,11 @@
-from .BaseDataModel import BaseDataModel
+from .base_repository import BaseRepository
 from helpers.config import Settings
 from .db_schemes import Asset
 from .enums.DataBaseEnum import DataBaseEnum
 from motor.motor_asyncio import AsyncIOMotorClient
 from pymongo.errors import DuplicateKeyError
 
-class AssetModel(BaseDataModel):
+class AssetRepository(BaseRepository):
 
     def __init__(self, db_client: AsyncIOMotorClient, settings: Settings):
         super().__init__(db_client=db_client, settings=settings)

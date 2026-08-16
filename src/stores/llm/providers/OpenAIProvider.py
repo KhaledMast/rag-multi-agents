@@ -81,10 +81,6 @@ class OpenAIProvider(LLMInterface):
             temperature=temperature
         )
 
-        print(f"finish_reason: {response.choices[0].finish_reason}")
-        print(f"usage: {response.usage}")
-
-
         if not response or not response.choices or len(response.choices) == 0 or not response.choices[0].message:
             self.logger.error("Error while generating text with OpenAI")
             return None

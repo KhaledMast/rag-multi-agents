@@ -1,18 +1,11 @@
 import logging
-from fastapi import APIRouter, Depends, status, Request
+from fastapi import APIRouter, Depends, status
 from fastapi.responses import JSONResponse
 from routes.schemes.nlp import PushRequest, SearchRequest
-from models.ProjectModel import ProjectModel
-from models.ChunkModel import ChunkModel
+from repositories.project_repository import ProjectRepository
+from repositories.chunk_repository import ChunkRepository
 from controllers import NLPController
-from helpers.config import get_settings, Settings
-from helpers.database import get_db_client
-from stores.llm.LLMInterface import LLMInterface
-from motor.motor_asyncio import AsyncIOMotorClient
-from stores.vectordb.providers import QdrantDBProvider
-from dependencies import get_template_parser
-from stores.llm.templates.template_parser import TemplateParser
-from models import ResponseSignal
+from repositories import ResponseSignal
 
 from dependencies import (
     get_project_model,
@@ -30,8 +23,8 @@ nlp_router = APIRouter(
 @nlp_router.post("/index/push/{project_id}")
 async def index_project(project_id: str, 
                         push_request: PushRequest,
-                        project_model: ProjectModel = Depends(get_project_model),
-                        chunk_model: ChunkModel = Depends(get_chunk_model),
+                        project_model: ProjectRepository = Depends(get_project_model),
+                        chunk_model: ChunkRepository = Depends(get_chunk_model),
                         nlp_controller: NLPController = Depends(get_nlp_controller)):
 
     
@@ -91,7 +84,7 @@ async def index_project(project_id: str,
 
 @nlp_router.get("/index/info/{project_id}")
 async def get_project_index_info(project_id: str,
-                                 project_model: ProjectModel = Depends(get_project_model),
+                                 project_model: ProjectRepository = Depends(get_project_model),
                                  nlp_controller: NLPController = Depends(get_nlp_controller)):
 
 
@@ -120,7 +113,7 @@ async def get_project_index_info(project_id: str,
 @nlp_router.post("/index/search/{project_id}")
 async def search_index(project_id: str, 
                        search_request: SearchRequest,
-                       project_model: ProjectModel = Depends(get_project_model),
+                       project_model: ProjectRepository = Depends(get_project_model),
                        nlp_controller: NLPController = Depends(get_nlp_controller)):
     
 
@@ -155,7 +148,7 @@ async def search_index(project_id: str,
 @nlp_router.post("/index/answer/{project_id}")
 async def answer_rag(project_id: str, 
                      search_request: SearchRequest,
-                     project_model: ProjectModel = Depends(get_project_model),
+                     project_model: ProjectRepository = Depends(get_project_model),
                      nlp_controller: NLPController = Depends(get_nlp_controller)):
     
     

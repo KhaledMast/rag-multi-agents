@@ -1,20 +1,17 @@
-from .BaseController import BaseController
-from .ProjectController import ProjectController
+import os
+from .project_controller import ProjectController
 from langchain_community.document_loaders import TextLoader
 from langchain_community.document_loaders import PyPDFLoader
 from langchain_text_splitters import RecursiveCharacterTextSplitter
-from models import ProcessingEnum
-from helpers.config import Settings
-import os
+from repositories import ProcessingEnum
 
-class ProcessController(BaseController):
 
-    def __init__(self, project_id: str, settings: Settings):
-        super().__init__()
+class ProcessController:
+
+    def __init__(self, project_id: str, project_controller: ProjectController):
 
         self.project_id = project_id
-        self.project = ProjectController(settings=settings)
-        self.project_path = self.project.get_project_path(project_id=project_id)
+        self.project = project_controller
 
     def get_file_extension(self, file_id: str) -> str:
         return os.path.splitext(file_id)[-1]
@@ -22,8 +19,9 @@ class ProcessController(BaseController):
     def get_file_loader(self, file_id: str):
 
         file_extension = self.get_file_extension(file_id=file_id)
+        project_path = self.project.get_project_path(project_id=self.project_id)
         file_path = os.path.join(
-            self.project_path, 
+            project_path, 
             file_id
         )
 

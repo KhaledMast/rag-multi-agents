@@ -1,18 +1,19 @@
-from .BaseController import BaseController
-from .ProjectController import ProjectController
+import re, os
+from .project_controller import ProjectController
+from services.file_storage_service import FileStorageService
 from helpers.config import Settings
 from fastapi import UploadFile
-from models import ResponseSignal
-import re
-import os
+from repositories import ResponseSignal
+from helpers.utils import generate_random_string
 
-class DataController(BaseController):
 
-    def __init__(self, settings: Settings):
-        super().__init__()
+class DataController:
+
+    def __init__(self, storage_service: FileStorageService, project_controller: ProjectController, settings: Settings):
         self.app_settings = settings
-        self.size_scale = 1024 * 1024  # Convert MB to bytes
-        self.project = ProjectController(settings=settings)
+        self.storage = storage_service 
+        self.size_scale = 1024 * 1024  
+        self.project = project_controller
 
 
     def check_upload(self, file: UploadFile):
@@ -21,7 +22,7 @@ class DataController(BaseController):
             return False, ResponseSignal.FILE_TYPE_NOT_SUPPORTED.value
 
         # Validate file size
-        if file.size > self.app_settings.FILE_MAX_SIZE * self.size_scale:  # Convert MB to bytes
+        if file.size > self.app_settings.FILE_MAX_SIZE * self.size_scale:  
             return False, ResponseSignal.FILE_SIZE_EXCEEDED.value
 
 
@@ -29,7 +30,7 @@ class DataController(BaseController):
 
     def generate_unique_file_path(self, original_file_name: str, project_id: str) -> str:
 
-        random_key = self.generate_random_string()
+        random_key = generate_random_string()
         project_path = self.project.get_project_path(project_id=project_id)
 
         cleaned_file_name = self.get_cleaned_file_name(
@@ -42,7 +43,7 @@ class DataController(BaseController):
         )
 
         while os.path.exists(new_file_name):
-            random_key = self.generate_random_string()
+            random_key = generate_random_string()
             new_file_name = os.path.join(
                 project_path,
                 f"{random_key}_{cleaned_file_name}"
