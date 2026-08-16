@@ -7,6 +7,7 @@ from helpers.database import ensure_database_indexes
 from stores.llm.LLMProviderFactory import LLMProviderFactory
 from stores.vectordb.VectorDBProviderFactory import VectorDBProviderFactory
 from stores.llm.templates.template_parser import TemplateParser
+from services.file_storage_service import FileStorageService 
 
 logger = logging.getLogger('uvicorn.error')
 
@@ -14,6 +15,7 @@ logger = logging.getLogger('uvicorn.error')
 async def lifespan(app: FastAPI):
     # Code executed at startup
     settings = get_settings()
+    storage_service = FileStorageService()
 
     # MongoDB client & DB
     db_client = AsyncIOMotorClient(settings.MONGODB_URL)
@@ -35,7 +37,7 @@ async def lifespan(app: FastAPI):
     )
 
     # VectorDB Factory & Client
-    vectordb_provider_factory = VectorDBProviderFactory(settings)
+    vectordb_provider_factory = VectorDBProviderFactory(storage_service=storage_service,settings=settings)
     app.state.vectorDB_factory = vectordb_provider_factory
     app.state.vectordb_client = vectordb_provider_factory.create(provider=settings.VECTOR_DB_BACKEND)
 

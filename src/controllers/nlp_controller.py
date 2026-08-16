@@ -1,15 +1,13 @@
-from .BaseController import BaseController
-from models.db_schemes import Project, DataChunk
+from repositories.db_schemes import Project, DataChunk
 from stores.llm.LLMEnums import DocumentTypeEnum
 from typing import List
 from langdetect import detect
 import json
 
-class NLPController(BaseController):
+class NLPController:
 
     def __init__(self, vectordb_client, generation_client, embedding_client, 
-                        template_parser=None, settings = None):
-        super().__init__(settings)
+                        template_parser=None):
 
         self.vectordb_client = vectordb_client
         self.generation_client = generation_client

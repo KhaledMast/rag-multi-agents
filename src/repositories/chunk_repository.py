@@ -1,12 +1,12 @@
 from typing import List
-from .BaseDataModel import BaseDataModel
+from .base_repository import BaseRepository
 from .db_schemes import DataChunk
 from helpers.config import Settings
 from .enums.DataBaseEnum import DataBaseEnum
 from motor.motor_asyncio import AsyncIOMotorClient
 from pymongo.errors import DuplicateKeyError
 
-class ChunkModel(BaseDataModel):
+class ChunkRepository(BaseRepository):
 
     def __init__(self, db_client: AsyncIOMotorClient, settings: Settings):
         super().__init__(db_client=db_client, settings=settings)

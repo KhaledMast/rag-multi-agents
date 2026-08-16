@@ -2,8 +2,8 @@ import logging
 from pymongo import IndexModel
 from motor.motor_asyncio import AsyncIOMotorClient
 from fastapi import Request
-from models.db_schemes import Project, DataChunk, Asset
-from models.enums.DataBaseEnum import DataBaseEnum
+from repositories.db_schemes import Project, DataChunk, Asset
+from repositories.enums.DataBaseEnum import DataBaseEnum
 
 
 logger = logging.getLogger('uvicorn.error')

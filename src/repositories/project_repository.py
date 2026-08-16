@@ -1,5 +1,5 @@
 from typing import List, Tuple
-from .BaseDataModel import BaseDataModel
+from .base_repository import BaseRepository
 from helpers.config import Settings
 from .db_schemes import Project
 from .enums.DataBaseEnum import DataBaseEnum
@@ -7,7 +7,7 @@ from motor.motor_asyncio import AsyncIOMotorClient
 from pymongo.errors import DuplicateKeyError
 import math
 
-class ProjectModel(BaseDataModel):
+class ProjectRepository(BaseRepository):
 
     def __init__(self, db_client: AsyncIOMotorClient, settings: Settings):
         super().__init__(db_client=db_client, settings=settings)
@@ -77,9 +77,6 @@ class ProjectModel(BaseDataModel):
             return [], 0
 
         total_pages = math.ceil(total_documents / page_size)
-
-        if total_documents % page_size > 0:
-            total_pages += 1
     
         skip = (page - 1) * page_size
         cursor = self.collection.find().skip(skip).limit(page_size)

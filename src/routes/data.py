@@ -1,13 +1,20 @@
 import logging, os, aiofiles
-from fastapi import APIRouter, Depends, UploadFile, status, Request
+from fastapi import APIRouter, Depends, UploadFile, status
 from fastapi.responses import JSONResponse
 from helpers.config import get_settings, Settings
-from controllers import DataController, ProcessController
-from models import ResponseSignal
 from .schemes.data import ProcessRequest
-from models import ProjectModel, ChunkModel, AssetModel
-from models.db_schemes import DataChunk, Asset
-from models.enums.AssetTypeEnum import AssetTypeEnum
+from repositories.db_schemes import DataChunk, Asset
+from repositories.enums.AssetTypeEnum import AssetTypeEnum
+
+from repositories import (
+    ResponseSignal, 
+    asset_repository, 
+    project_repository,
+    chunk_repository)
+
+from controllers import (
+    DataController, 
+    ProcessController)
 
 from dependencies import (
     get_project_model, 
@@ -27,8 +34,8 @@ data_router = APIRouter(
 @data_router.post("/upload/{project_id}")
 async def upload_data(project_id: str, 
                       file: UploadFile, 
-                      project_model: ProjectModel = Depends(get_project_model),
-                      asset_model: AssetModel = Depends(get_asset_model),
+                      project_model: project_repository = Depends(get_project_model),
+                      asset_model: asset_repository = Depends(get_asset_model),
                       data_controller: DataController = Depends(get_data_controller),
                       app_settings: Settings = Depends(get_settings)):
 
@@ -89,9 +96,9 @@ async def upload_data(project_id: str,
 @data_router.post("/process/{project_id}")
 async def process_endpoint(project_id: str, 
                            process_request: ProcessRequest,
-                           project_model: ProjectModel = Depends(get_project_model),
-                           asset_model: AssetModel = Depends(get_asset_model),
-                           chunk_model: ChunkModel = Depends(get_chunk_model),
+                           project_model: project_repository = Depends(get_project_model),
+                           asset_model: asset_repository = Depends(get_asset_model),
+                           chunk_model: chunk_repository = Depends(get_chunk_model),
                            process_controller: ProcessController = Depends(get_process_controller)):
 
     chunk_size = process_request.chunk_size
