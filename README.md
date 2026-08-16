@@ -82,6 +82,6 @@ The server will be available at: `http://localhost:5000`
 
 ## 🧪 Testing & API Exploration
 
-An official Postman collection is provided to help you test the endpoints (`/upload`, `/process`, `/ask`) right away.
+An official Postman collection is provided to help you test the endpoints (`/upload`, `/process`, `/answer`) right away.
 
 📥 **Download Link:** [Postman Collection](assets/rag-multi-agents.postman_collection.json)
