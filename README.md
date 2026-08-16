@@ -1,87 +1,119 @@
-# 🤖 rag-multi-agents
+# 🤖 RAG Multi-Agents
 
-> A modular RAG pipeline designed for upcoming multi-agent orchestration and advanced retrieval.
-
----
-
-## 📋 Requirements
-
-* **Python:** 3.12+
-* **Package Manager:** `uv` (recommended)
-* **Containers:** Docker & Docker Compose
+A FastAPI-based RAG application that indexes and searches document chunks with a vector database, and integrates LLM providers for generation and embeddings.
 
 ---
 
-## ⚙️ Installation & Setup
+## Requirements
 
-### 1. Environment Setup (via MiniConda)
+- Python 3.12+
+- Docker and Docker Compose
+- Optional: `uv` for package installation
 
-Follow these steps to isolate your environment and prepare the optimized package installer:
+---
+
+## Environment setup
+
+From the project root:
 
 ```bash
-# Create a fresh Python 3.12 environment
-conda create -n rag-multi-agents-app python=3.12 -y
-
-# Activate the environment
-conda activate rag-multi-agents-app
-
-# Install 'uv' for ultra-fast dependency management
-conda install -c conda-forge uv -y
+cd src
+cp .env.exemple .env
 ```
 
-*(Optional) Improve your terminal readability by updating your prompt style:*
+Then update the values in `.env` according to your environment (MongoDB, LLM provider, vector DB, etc.).
+
+For Docker services, copy the example file in the docker folder:
+
 ```bash
-export PS1="\[\033[01;32m\]\u@\h:\w\n\[\033[00m\]\$ "
+cd docker
+cp .env.exemple .env
 ```
 
-### 2. Dependency Installation
+---
 
-Use `uv` to install the project dependencies instantly:
+## Install dependencies
+
+With `pip`:
+
 ```bash
+cd src
+pip install -r requirements.txt
+```
+
+With `uv`:
+
+```bash
+cd src
 uv pip install -r requirements.txt
 ```
 
-### 3. Application Configuration
-
-Duplicate the template and fill in your application secrets:
-```bash
-cp .env.example .env
-```
-
 ---
 
-## 🐋 Infrastructure (Docker Services)
-
-Launch the core infrastructure (MongoDB, Qdrant, etc.) using Docker Compose:
+## Start infrastructure
 
 ```bash
-# Navigate to the docker infrastructure folder
 cd docker
-
-# Setup the infrastructure secrets
-cp .env.example .env
-
-# Open .env and fill in your credentials, then start the services
-sudo docker compose up -d
+docker compose up -d
 ```
+
+This starts the required infrastructure services such as MongoDB and other project dependencies.
 
 ---
 
-## 🚀 Running the Application
+## Run the API
 
-Start the FastAPI application in development mode with live-reload enabled:
+From the project root, launch the application from the `src` folder:
 
 ```bash
-# Ensure you are back in the project root directory containing main.py
+cd src
 uvicorn main:app --reload --host 0.0.0.0 --port 5000
 ```
 
-The server will be available at: `http://localhost:5000`
+The API will be available at:
+
+```text
+http://localhost:5000
+```
 
 ---
 
-## 🧪 Testing & API Exploration
+## API routes
 
-An official Postman collection is provided to help you test the endpoints (`/upload`, `/process`, `/answer`) right away.
 
-📥 **Download Link:** [Postman Collection](assets/rag-multi-agents.postman_collection.json)
+### Data
+
+```http
+POST /api/v1/data/upload/{project_id}
+POST /api/v1/data/process/{project_id}
+```
+
+### NLP / RAG
+
+```http
+POST /api/v1/nlp/index/push/{project_id}
+GET /api/v1/nlp/index/info/{project_id}
+POST /api/v1/nlp/index/search/{project_id}
+POST /api/v1/nlp/index/answer/{project_id}
+```
+
+---
+
+## API testing
+
+A Postman collection is included for manual testing:
+
+- [src/assets/rag-multi-agents.postman_collection.json](src/assets/rag-multi-agents.postman_collection.json)
+
+---
+
+## Notes
+
+This project is structured around a modular backend with:
+- FastAPI for the API layer
+- MongoDB for document metadata storage
+- Qdrant for vector search
+- LLM providers for generation and embeddings
+- services and repositories organized by responsibility
+
+This is a practical RAG backend foundation that can be extended into a more advanced multi-agent architecture.
