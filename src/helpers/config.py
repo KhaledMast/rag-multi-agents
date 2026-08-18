@@ -15,6 +15,7 @@ class Settings(BaseSettings):
 
     GENERATION_BACKEND: str
     EMBEDDING_BACKEND: str
+    RERANK_BACKEND: str
 
     OPENAI_API_KEY: str = None
     OPENAI_API_URL: str = None
@@ -23,6 +24,8 @@ class Settings(BaseSettings):
     GENERATION_MODEL_ID: str = None
     EMBEDDING_MODEL_ID: str = None
     EMBEDDING_MODEL_SIZE: int = None
+    RERANK_MODEL_ID: str = None
+    RERANK_TOP: int
 
     INPUT_DEFAULT_MAX_CHARACTERS: int = None
     GENERATION_DEFAULT_MAX_TOKENS: int = None

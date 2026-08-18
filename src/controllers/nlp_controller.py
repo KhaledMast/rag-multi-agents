@@ -4,15 +4,20 @@ from typing import List
 from langdetect import detect
 import json
 
+
 class NLPController:
 
     def __init__(self, vectordb_client, generation_client, embedding_client, 
-                        template_parser=None):
+                        template_parser=None, reranking_client=None,
+                        rerank_top: int = 5):
 
         self.vectordb_client = vectordb_client
         self.generation_client = generation_client
         self.embedding_client = embedding_client
+        self.reranking_client = reranking_client
         self.template_parser = template_parser
+        self.rerank_top = rerank_top
+
 
     def create_collection_name(self, project_id: str):
         return f"collection_{project_id}".strip()
@@ -83,12 +88,25 @@ class NLPController:
 
         return results
 
+    def rerank_retrieved_documents(self, query: str, documents: list, top_n: int = None):
+
+        if not self.reranking_client or not documents:
+            return documents
+
+        top_n = top_n if top_n is not None else self.rerank_top
+
+        return self.reranking_client.rerank_documents(
+            query=query,
+            documents=documents,
+            top_n=top_n,
+        )
+
     def answer_rag_question(self, project: Project, query: str, limit: int = 10):
         
         answer, full_prompt, chat_history = None, None, None
 
         result = detect(query)
-        detected_lang = result if result is not None else "fr"
+        detected_lang = result if result is not None else "en"
 
         retrieved_documents = self.search_vector_db_collection(
             project=project,
@@ -98,17 +116,15 @@ class NLPController:
 
         if not retrieved_documents or len(retrieved_documents) == 0:
             return answer, full_prompt, chat_history
+
         
-        
+        retrieved_documents = self.rerank_retrieved_documents(
+            query=query,
+            documents=retrieved_documents,
+        )
+
         system_prompt = self.template_parser.get("rag", "system_prompt", detected_lang)
 
-        # documents_prompts = "\n".join([
-        #     self.template_parser.get("rag", "document_prompt", {
-        #             "doc_num": idx + 1,
-        #             "chunk_text": doc.text,
-        #     })
-        #     for idx, doc in enumerate(retrieved_documents)
-        # ])
 
         documents_prompts = self.template_parser.get("rag", "document_prompt", detected_lang, {
             "documents": [

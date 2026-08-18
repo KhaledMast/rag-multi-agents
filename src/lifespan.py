@@ -1,8 +1,6 @@
 import logging
 from contextlib import asynccontextmanager
-
 from fastapi import FastAPI
-
 from app_state import AppState
 from helpers.config import get_settings
 from helpers.database import ensure_database_indexes
@@ -37,6 +35,9 @@ class AppLifespan:
             embedding_size=settings.EMBEDDING_MODEL_SIZE,
         )
 
+        reranking_client = llm_provider_factory.create(provider=settings.RERANK_BACKEND)
+        reranking_client.set_rerank_model(model_id=settings.RERANK_MODEL_ID)
+
         vectordb_provider_factory = VectorDBProviderFactory(
             storage_service=storage_service,
             settings=settings,
@@ -53,6 +54,7 @@ class AppLifespan:
             mongodb_database=mongodb_database,
             generation_client=generation_client,
             embedding_client=embedding_client,
+            reranking_client=reranking_client,
             vectordb_client=vectordb_client,
             template_parser=template_parser,
         )

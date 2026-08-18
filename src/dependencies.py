@@ -26,6 +26,8 @@ def get_generation_client(state: AppState = Depends(get_app_state)) -> LLMInterf
 def get_embedding_client(state: AppState = Depends(get_app_state)) -> LLMInterface:
     return state.embedding_client
 
+def get_reranking_client(state: AppState = Depends(get_app_state)) -> LLMInterface:
+    return state.reranking_client
 
 def get_vectordb_client(state: AppState = Depends(get_app_state)) -> VectorDBInterface:
     return state.vectordb_client
@@ -89,11 +91,15 @@ def get_nlp_controller(
     vectordb_client: VectorDBInterface = Depends(get_vectordb_client),
     generation_client: LLMInterface = Depends(get_generation_client),
     embedding_client: LLMInterface = Depends(get_embedding_client),
+    reranking_client: LLMInterface = Depends(get_reranking_client),
     template_parser: TemplateParser = Depends(get_template_parser),
+    settings: Settings = Depends(get_settings),
 ) -> NLPController:
     return NLPController(
         vectordb_client=vectordb_client,
         generation_client=generation_client,
         embedding_client=embedding_client,
+        reranking_client=reranking_client,
         template_parser=template_parser,
+        rerank_top=settings.RERANK_TOP,
     )

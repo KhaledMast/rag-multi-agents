@@ -8,12 +8,13 @@ from stores.vectordb.VectorDBInterface import VectorDBInterface  # cf. note en b
 
 @dataclass
 class AppState:
-    """Regroupe toutes les ressources partagées de l'app RAG."""
+    """It groups together all the shared resources of the RAG app"""
     storage_service: FileStorageService
     mongodb_client: AsyncIOMotorClient
     mongodb_database: AsyncIOMotorDatabase
     generation_client: LLMInterface
     embedding_client: LLMInterface
+    reranking_client: LLMInterface
     vectordb_client: VectorDBInterface
     template_parser: TemplateParser
 

@@ -22,6 +22,8 @@ class CoHereProvider(LLMInterface):
         self.embedding_model_id = None
         self.embedding_size = None
 
+        self.rerank_model_id = None
+
         # TODO Client --> ClientV2
         self.client = cohere.Client(api_key=self.api_key)
 
@@ -32,6 +34,10 @@ class CoHereProvider(LLMInterface):
     def set_generation_model(self, model_id: str):
         self.generation_model_id = model_id
 
+
+    def set_embedding_model(self, model_id: str, embedding_size: int):
+        self.embedding_model_id = model_id  
+        self.embedding_size = embedding_size  
 
     def set_embedding_model(self, model_id: str, embedding_size: int):
         self.embedding_model_id = model_id  
@@ -104,4 +110,41 @@ class CoHereProvider(LLMInterface):
                 "role": role,
                 "text": self.process_text(prompt)
             }
-    
+
+    def set_rerank_model(self, model_id: str):
+        self.rerank_model_id = model_id
+
+    def rerank_documents(self, query: str, documents: list, top_n: int = None):
+
+        if not self.client:
+            self.logger.error("CoHere Client was not set")
+            return documents
+
+        if not self.rerank_model_id:
+            self.logger.error("Rerank model for CoHere was not set")
+            return documents
+
+        if not documents:
+            return documents
+
+        texts = [self.process_text(doc.text) for doc in documents]
+
+        try:
+            response = self.client.rerank(
+                model=self.rerank_model_id,
+                query=self.process_text(query),
+                documents=texts,
+                top_n=top_n or len(texts),
+            )
+        except Exception as e:
+            self.logger.error(f"Error while reranking with CoHere: {e}")
+            return documents[:top_n] if top_n else documents
+
+        if not response or not response.results:
+            self.logger.error("Empty response while reranking with CoHere")
+            return documents[:top_n] if top_n else documents
+
+        return [
+            documents[result.index] 
+            for result in response.results
+        ]

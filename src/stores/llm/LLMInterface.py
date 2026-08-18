@@ -22,4 +22,12 @@ class LLMInterface(ABC):
     @abstractmethod
     def construct_prompt(self, prompt: str, role: str, truncate: bool = True):
         pass
+
     
+    @abstractmethod
+    def set_rerank_model(self, model_id: str):
+        pass
+
+    @abstractmethod
+    def rerank_documents(self, query: str, documents: list, top_n: int = None):
+        pass
