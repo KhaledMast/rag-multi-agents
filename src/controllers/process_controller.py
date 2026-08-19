@@ -8,18 +8,19 @@ from repositories import ProcessingEnum
 
 class ProcessController:
 
-    def __init__(self, project_id: str, project_controller: ProjectController):
+    def __init__(self, project_controller: ProjectController):
 
-        self.project_id = project_id
         self.project = project_controller
+
+
 
     def get_file_extension(self, file_id: str) -> str:
         return os.path.splitext(file_id)[-1]
 
-    def get_file_loader(self, file_id: str):
+    def get_file_loader(self, project_id: str, file_id: str):
 
         file_extension = self.get_file_extension(file_id=file_id)
-        project_path = self.project.get_project_path(project_id=self.project_id)
+        project_path = self.project.get_project_path(project_id=project_id)
         file_path = os.path.join(
             project_path, 
             file_id
@@ -36,9 +37,9 @@ class ProcessController:
 
         return None
 
-    def get_file_content(self, file_id: str):
+    def get_file_content(self, project_id: str,  file_id: str):
 
-        loader = self.get_file_loader(file_id=file_id)
+        loader = self.get_file_loader(project_id=project_id, file_id=file_id)
 
         if loader is None:
             return None

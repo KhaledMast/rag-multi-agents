@@ -81,10 +81,9 @@ def get_data_controller(
 
 
 def get_process_controller(
-    project_id: str,
     project_controller: ProjectController = Depends(get_project_controller),
 ) -> ProcessController:
-    return ProcessController(project_id=project_id, project_controller=project_controller)
+    return ProcessController(project_controller=project_controller)
 
 
 def get_nlp_controller(
