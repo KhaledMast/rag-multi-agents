@@ -1,15 +1,18 @@
 from repositories.db_schemes import Project, DataChunk
 from stores.llm.LLMEnums import DocumentTypeEnum
+from helpers.config import Settings
 from typing import List
-from langdetect import detect
-import json
+from langdetect import detect, LangDetectException
+import json, logging
+
+logger = logging.getLogger(__name__)
 
 
 class NLPController:
 
     def __init__(self, vectordb_client, generation_client, embedding_client, 
                         template_parser=None, reranking_client=None,
-                        rerank_top: int = 5):
+                        rerank_top: int = 5, settings: Settings = None):
 
         self.vectordb_client = vectordb_client
         self.generation_client = generation_client
@@ -17,6 +20,27 @@ class NLPController:
         self.reranking_client = reranking_client
         self.template_parser = template_parser
         self.rerank_top = rerank_top
+        self.settings = settings
+
+        self.default_language = settings.DEFAULT_LANG
+        self.supported_languages = {
+            lang for lang in (settings.DEFAULT_LANG, settings.PRIMARY_LANG, settings.SECONDARY_LANG)
+            if lang
+        }
+
+
+    def _detect_supported_language(self, query: str) -> str:
+        try:
+            detected = detect(query)
+        except LangDetectException:
+            logger.warning("langdetect failed — fallback to '%s'", self.default_language)
+            return self.default_language
+
+        if detected not in self.supported_languages:
+            logger.info("Language detected '%s' unsupported — fallback to '%s'", detected, self.default_language)
+            return self.default_language
+
+        return detected
 
 
     def create_collection_name(self, project_id: str):
@@ -105,8 +129,10 @@ class NLPController:
         
         answer, full_prompt, chat_history = None, None, None
 
-        result = detect(query)
-        detected_lang = result if result is not None else "en"
+        # result = detect(query)
+        # detected_lang = result if result is not None else "en"
+
+        detected_lang = self._detect_supported_language(query)
 
         retrieved_documents = self.search_vector_db_collection(
             project=project,

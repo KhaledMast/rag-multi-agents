@@ -101,4 +101,5 @@ def get_nlp_controller(
         reranking_client=reranking_client,
         template_parser=template_parser,
         rerank_top=settings.RERANK_TOP,
+        settings=settings,
     )
