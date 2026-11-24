@@ -86,6 +86,10 @@ class QdrantDBProvider(VectorDBInterface):
     def insert_many(self, collection_name: str, texts: list, 
                           vectors: list, metadata: list = None, 
                           record_ids: list = None, batch_size: int = 50):
+
+        if not self.is_collection_existed(collection_name):
+            self.logger.error(f"Can not insert records to non-existed collection: {collection_name}")
+            return False
         
         if metadata is None:
             metadata = [None] * len(texts)

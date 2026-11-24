@@ -3,7 +3,7 @@ from motor.motor_asyncio import AsyncIOMotorClient, AsyncIOMotorDatabase
 from services.file_storage_service import FileStorageService
 from stores.llm.LLMInterface import LLMInterface
 from stores.llm.templates.template_parser import TemplateParser
-from stores.vectordb.VectorDBInterface import VectorDBInterface  # cf. note en bas
+from stores.vectordb.VectorDBInterface import VectorDBInterface 
 
 
 @dataclass

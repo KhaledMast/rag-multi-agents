@@ -117,7 +117,9 @@ async def search_index(project_id: str,
                        nlp_controller: NLPController = Depends(get_nlp_controller)):
     
 
-    project = await project_model.get_project_or_create_one(project_id=project_id)
+    project = await project_model.get_project_or_create_one(
+        project_id=project_id
+    )
 
     if not project:
         return JSONResponse(
@@ -152,7 +154,9 @@ async def answer_rag(project_id: str,
                      nlp_controller: NLPController = Depends(get_nlp_controller)):
     
     
-    project = await project_model.get_project_or_create_one(project_id=project_id)
+    project = await project_model.get_project_or_create_one(
+        project_id=project_id
+    )
 
     if not project:
         return JSONResponse(

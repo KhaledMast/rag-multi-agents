@@ -12,14 +12,14 @@ class NLPController:
 
     def __init__(self, vectordb_client, generation_client, embedding_client, 
                         template_parser=None, reranking_client=None,
-                        rerank_top: int = 5, settings: Settings = None):
+                        settings: Settings = None):
 
         self.vectordb_client = vectordb_client
         self.generation_client = generation_client
         self.embedding_client = embedding_client
         self.reranking_client = reranking_client
         self.template_parser = template_parser
-        self.rerank_top = rerank_top
+        self.rerank_top = settings.RERANK_TOP
         self.settings = settings
 
         self.default_language = settings.DEFAULT_LANG
