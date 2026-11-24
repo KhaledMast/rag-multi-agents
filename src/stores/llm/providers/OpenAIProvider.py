@@ -115,3 +115,12 @@ class OpenAIProvider(LLMInterface):
             "role": role,
             "content": self.process_text(prompt) if truncate else prompt.strip()
         }
+
+    def rerank_documents(self, query: str, documents: list, top_n: int = None):
+        return documents[:top_n] if top_n else documents
+
+    def set_rerank_model(self, model_id: str):
+        pass
+
+    def rerank_documents(self, query: str, documents: list, top_n: int = None):
+        pass

@@ -1,18 +1,47 @@
 from repositories.db_schemes import Project, DataChunk
 from stores.llm.LLMEnums import DocumentTypeEnum
+from helpers.config import Settings
 from typing import List
-from langdetect import detect
-import json
+from langdetect import detect, LangDetectException
+import json, logging
+
+logger = logging.getLogger(__name__)
+
 
 class NLPController:
 
     def __init__(self, vectordb_client, generation_client, embedding_client, 
-                        template_parser=None):
+                        template_parser=None, reranking_client=None,
+                        settings: Settings = None):
 
         self.vectordb_client = vectordb_client
         self.generation_client = generation_client
         self.embedding_client = embedding_client
+        self.reranking_client = reranking_client
         self.template_parser = template_parser
+        self.rerank_top = settings.RERANK_TOP
+        self.settings = settings
+
+        self.default_language = settings.DEFAULT_LANG
+        self.supported_languages = {
+            lang for lang in (settings.DEFAULT_LANG, settings.PRIMARY_LANG, settings.SECONDARY_LANG)
+            if lang
+        }
+
+
+    def _detect_supported_language(self, query: str) -> str:
+        try:
+            detected = detect(query)
+        except LangDetectException:
+            logger.warning("langdetect failed — fallback to '%s'", self.default_language)
+            return self.default_language
+
+        if detected not in self.supported_languages:
+            logger.info("Language detected '%s' unsupported — fallback to '%s'", detected, self.default_language)
+            return self.default_language
+
+        return detected
+
 
     def create_collection_name(self, project_id: str):
         return f"collection_{project_id}".strip()
@@ -83,12 +112,27 @@ class NLPController:
 
         return results
 
+    def rerank_retrieved_documents(self, query: str, documents: list, top_n: int = None):
+
+        if not self.reranking_client or not documents:
+            return documents
+
+        top_n = top_n if top_n is not None else self.rerank_top
+
+        return self.reranking_client.rerank_documents(
+            query=query,
+            documents=documents,
+            top_n=top_n,
+        )
+
     def answer_rag_question(self, project: Project, query: str, limit: int = 10):
         
         answer, full_prompt, chat_history = None, None, None
 
-        result = detect(query)
-        detected_lang = result if result is not None else "fr"
+        # result = detect(query)
+        # detected_lang = result if result is not None else "en"
+
+        detected_lang = self._detect_supported_language(query)
 
         retrieved_documents = self.search_vector_db_collection(
             project=project,
@@ -98,17 +142,15 @@ class NLPController:
 
         if not retrieved_documents or len(retrieved_documents) == 0:
             return answer, full_prompt, chat_history
+
         
-        
+        retrieved_documents = self.rerank_retrieved_documents(
+            query=query,
+            documents=retrieved_documents,
+        )
+
         system_prompt = self.template_parser.get("rag", "system_prompt", detected_lang)
 
-        # documents_prompts = "\n".join([
-        #     self.template_parser.get("rag", "document_prompt", {
-        #             "doc_num": idx + 1,
-        #             "chunk_text": doc.text,
-        #     })
-        #     for idx, doc in enumerate(retrieved_documents)
-        # ])
 
         documents_prompts = self.template_parser.get("rag", "document_prompt", detected_lang, {
             "documents": [

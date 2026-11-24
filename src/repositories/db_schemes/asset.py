@@ -2,7 +2,6 @@ from typing import Optional
 from pydantic import BaseModel, Field
 from helpers.fields import PyObjectId
 from datetime import datetime
-from bson import ObjectId
 
 class Asset(BaseModel):
     id: Optional[PyObjectId] = Field(None, alias="_id")

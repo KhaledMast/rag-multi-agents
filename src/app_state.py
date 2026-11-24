@@ -3,17 +3,18 @@ from motor.motor_asyncio import AsyncIOMotorClient, AsyncIOMotorDatabase
 from services.file_storage_service import FileStorageService
 from stores.llm.LLMInterface import LLMInterface
 from stores.llm.templates.template_parser import TemplateParser
-from stores.vectordb.VectorDBInterface import VectorDBInterface  # cf. note en bas
+from stores.vectordb.VectorDBInterface import VectorDBInterface 
 
 
 @dataclass
 class AppState:
-    """Regroupe toutes les ressources partagées de l'app RAG."""
+    """It groups together all the shared resources of the RAG app"""
     storage_service: FileStorageService
     mongodb_client: AsyncIOMotorClient
     mongodb_database: AsyncIOMotorDatabase
     generation_client: LLMInterface
     embedding_client: LLMInterface
+    reranking_client: LLMInterface
     vectordb_client: VectorDBInterface
     template_parser: TemplateParser
 
