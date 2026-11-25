@@ -1,8 +1,8 @@
 from fastapi import Depends, Request
 from motor.motor_asyncio import AsyncIOMotorClient
 from controllers import DataController, NLPController, ProcessController, ProjectController
-from app_state import AppState
-from helpers.config import Settings, get_settings
+from core.app_state import AppState
+from core.config import Settings, get_settings
 from repositories import AssetRepository, ChunkRepository, ProjectRepository
 from services.file_storage_service import FileStorageService
 from stores.llm.LLMInterface import LLMInterface

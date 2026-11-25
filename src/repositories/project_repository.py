@@ -1,6 +1,6 @@
 from typing import List, Tuple
 from .base_repository import BaseRepository
-from helpers.config import Settings
+from core.config import Settings
 from .db_schemes import Project
 from .enums.DataBaseEnum import DataBaseEnum
 from motor.motor_asyncio import AsyncIOMotorClient

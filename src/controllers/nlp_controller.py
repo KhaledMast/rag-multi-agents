@@ -1,6 +1,6 @@
 from repositories.db_schemes import Project, DataChunk
 from stores.llm.LLMEnums import DocumentTypeEnum
-from helpers.config import Settings
+from core.config import Settings
 from typing import List
 from langdetect import detect, LangDetectException
 import json, logging

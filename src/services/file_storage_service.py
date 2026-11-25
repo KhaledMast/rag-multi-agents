@@ -4,9 +4,9 @@ class FileStorageService:
 
     def __init__(self):
         
-        self.base_path: Path = Path(__file__).resolve().parent.parent        
-        self.files_dir: Path = self.base_path / "assets" / "files"        
-        self.database_dir: Path = self.base_path / "assets" / "database"
+        self.base_path: Path = Path(__file__).resolve().parent.parent.parent   
+        self.files_dir: Path = self.base_path / "storage" / "assets" / "files"        
+        self.database_dir: Path = self.base_path / "storage" / "assets" / "database"
  
 
     def get_database_path(self, db_name: str):

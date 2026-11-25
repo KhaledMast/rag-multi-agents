@@ -17,7 +17,6 @@ A FastAPI-based RAG application that indexes and searches document chunks with a
 From the project root:
 
 ```bash
-cd src
 cp .env.example .env
 ```
 
@@ -37,14 +36,12 @@ cp .env.example .env
 With `pip`:
 
 ```bash
-cd src
 pip install -r requirements.txt
 ```
 
 With `uv`:
 
 ```bash
-cd src
 uv pip install -r requirements.txt
 ```
 
@@ -55,6 +52,7 @@ uv pip install -r requirements.txt
 ```bash
 cd docker
 docker compose up -d
+cd ..
 ```
 
 This starts the required infrastructure services such as MongoDB and other project dependencies.
@@ -103,7 +101,7 @@ POST /api/v1/nlp/index/answer/{project_id}
 
 A Postman collection is included for manual testing:
 
-- [src/assets/rag-multi-agents.postman_collection.json](src/assets/rag-multi-agents.postman_collection.json)
+- [storage/assets/rag-multi-agents.postman_collection.json](storage/assets/rag-multi-agents.postman_collection.json)
 
 ---
 

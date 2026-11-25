@@ -1,7 +1,7 @@
 import logging, os, aiofiles
 from fastapi import APIRouter, Depends, UploadFile, status
 from fastapi.responses import JSONResponse
-from helpers.config import get_settings, Settings
+from core.config import get_settings, Settings
 from .schemes.data import ProcessRequest
 from repositories.db_schemes import DataChunk, Asset
 from repositories.enums.AssetTypeEnum import AssetTypeEnum
@@ -16,7 +16,7 @@ from controllers import (
     DataController, 
     ProcessController)
 
-from dependencies import (
+from core.dependencies import (
     get_project_repository, 
     get_asset_repository, 
     get_chunk_repository, 

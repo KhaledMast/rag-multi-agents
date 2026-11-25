@@ -1,4 +1,4 @@
-from helpers.config import Settings
+from core.config import Settings
 from motor.motor_asyncio import AsyncIOMotorClient
 
 class BaseRepository:

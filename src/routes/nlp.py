@@ -7,7 +7,7 @@ from repositories.chunk_repository import ChunkRepository
 from controllers import NLPController
 from repositories import ResponseSignal
 
-from dependencies import (
+from core.dependencies import (
     get_project_repository,
     get_chunk_repository,
     get_nlp_controller)

@@ -1,7 +1,10 @@
+from pathlib import Path
 from pydantic_settings import BaseSettings, SettingsConfigDict
 from pydantic import SecretStr
 from functools import lru_cache
 from typing import Optional
+
+BASE_DIR = Path(__file__).resolve().parent.parent.parent
 
 class Settings(BaseSettings):
 
@@ -40,9 +43,13 @@ class Settings(BaseSettings):
     DEFAULT_LANG : str
     PRIMARY_LANG : str
     SECONDARY_LANG : str
+   
 
     # Note: In Pydantic v2, we use model_config rather than class Config
-    model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8")
+    model_config = SettingsConfigDict(
+        env_file=BASE_DIR / ".env", 
+        env_file_encoding="utf-8"
+        )
 
 # The decorator keeps the instance in memory after the first call
 @lru_cache
