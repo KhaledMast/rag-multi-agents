@@ -13,13 +13,13 @@ class TemplateParser:
         if not self._language_exists(default_language):
             raise ValueError(
                 f"default_language='{default_language}' not found in "
-                f"{os.path.join(self.current_path, 'locales')}"
+                f"{os.path.join(self.current_path, 'languages')}"
             )
 
     def _language_exists(self, language: str) -> bool:
         if not language:
             return False
-        language_path = os.path.join(self.current_path, "locales", language)
+        language_path = os.path.join(self.current_path, "languages", language)
         return os.path.exists(language_path)
 
     def get(self, group: str, key: str, language: str = None, vars: dict = None) -> str | None:
@@ -37,14 +37,14 @@ class TemplateParser:
 
         target_language = language if self._language_exists(language) else self.default_language
 
-        group_path = os.path.join(self.current_path, "locales", target_language, f"{group}.py")
+        group_path = os.path.join(self.current_path, "languages", target_language, f"{group}.py")
         if not os.path.exists(group_path):
             logger.warning(
                 "File '%s.py' not found for lang='%s' — fallback to default_language='%s'",
                 group, target_language, self.default_language,
             )
             target_language = self.default_language
-            group_path = os.path.join(self.current_path, "locales", target_language, f"{group}.py")
+            group_path = os.path.join(self.current_path, "languages", target_language, f"{group}.py")
 
         if not os.path.exists(group_path):
             logger.warning(
@@ -54,7 +54,7 @@ class TemplateParser:
             return None
 
         module = __import__(
-            f"stores.llm.templates.locales.{target_language}.{group}",
+            f"stores.llm.templates.languages.{target_language}.{group}",
             fromlist=[group],
         )
 
