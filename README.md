@@ -18,7 +18,7 @@ From the project root:
 
 ```bash
 cd src
-cp .env.exemple .env
+cp .env.example .env
 ```
 
 Then update the values in `.env` according to your environment (MongoDB, LLM provider, vector DB, etc.).
@@ -27,7 +27,7 @@ For Docker services, copy the example file in the docker folder:
 
 ```bash
 cd docker
-cp .env.exemple .env
+cp .env.example .env
 ```
 
 ---
