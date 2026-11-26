@@ -1,4 +1,4 @@
-from typing import List, Tuple
+from typing import List, Tuple, Optional
 from .base_repository import BaseRepository
 from core.config import Settings
 from .db_schemes import Project
@@ -11,8 +11,6 @@ class ProjectRepository(BaseRepository):
 
     def __init__(self, db_client: AsyncIOMotorClient, settings: Settings):
         super().__init__(db_client=db_client, settings=settings)
-              
-        # self.collection = self.db_client[DataBaseEnum.COLLECTION_PROJECTS_NAME.value]
 
         self.db = self.db_client[self.settings.MONGODB_DATABASE]
         self.collection = self.db[DataBaseEnum.COLLECTION_PROJECTS_NAME.value]
@@ -58,6 +56,19 @@ class ProjectRepository(BaseRepository):
             project = await self.create_project(project)
 
             return project
+
+        return Project(**record)
+
+    async def get_project(self, project_id: str) -> Optional[Project]:
+        """
+        Retrieve a project by ID without creating it if it doesn't exist.
+        """
+        record = await self.collection.find_one({
+            "project_id": project_id
+        })
+
+        if record is None:
+            return None
 
         return Project(**record)
 

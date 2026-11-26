@@ -12,10 +12,8 @@ class ProcessController:
 
         self.project = project_controller
 
-
-
     def get_file_extension(self, file_id: str) -> str:
-        return os.path.splitext(file_id)[-1]
+        return os.path.splitext(file_id)[-1].lower()
 
     def get_file_loader(self, project_id: str, file_id: str):
 
@@ -57,17 +55,13 @@ class ProcessController:
         )
 
         file_content_texts = [
-
             doc.page_content 
             for doc in file_content
-
         ]
 
         file_content_metadatas= [
-        
             doc.metadata 
             for doc in file_content
-
         ]
 
         chunks = text_splitter.create_documents(

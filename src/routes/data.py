@@ -8,9 +8,9 @@ from repositories.enums.AssetTypeEnum import AssetTypeEnum
 
 from repositories import (
     ResponseSignal, 
-    asset_repository, 
-    project_repository,
-    chunk_repository)
+    AssetRepository, 
+    ProjectRepository,
+    ChunkRepository)
 
 from controllers import (
     DataController, 
@@ -34,8 +34,8 @@ data_router = APIRouter(
 @data_router.post("/upload/{project_id}")
 async def upload_data(project_id: str, 
                       file: UploadFile, 
-                      project_repository: project_repository = Depends(get_project_repository),
-                      asset_repository: asset_repository = Depends(get_asset_repository),
+                      project_repository: ProjectRepository = Depends(get_project_repository),
+                      asset_repository: AssetRepository = Depends(get_asset_repository),
                       data_controller: DataController = Depends(get_data_controller),
                       app_settings: Settings = Depends(get_settings)):
 
@@ -82,13 +82,24 @@ async def upload_data(project_id: str,
         asset_size=os.path.getsize(file_path)
     )
 
-    asset_record = await asset_repository.create_asset(
-        asset=asset_resource
-    )
+    try:
+
+        asset_record = await asset_repository.create_asset(
+            asset=asset_resource
+            )
+        
+    except Exception as e:
+        logger.error(f"Error while saving asset in DB: {e}")
+        if os.path.exists(file_path):
+            os.remove(file_path)
+        return JSONResponse(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            content={"signal": ResponseSignal.FILE_UPLOAD_FAILED.value}
+        )
     
     return JSONResponse(
         content={
-            "signal": ResponseSignal.FILE_VALIDATED_SUCCESS.value,
+            "signal": ResponseSignal.FILE_UPLOAD_SUCCESS.value,
             "file_id": str(asset_record.id)
         }
     )
@@ -96,9 +107,9 @@ async def upload_data(project_id: str,
 @data_router.post("/process/{project_id}")
 async def process_endpoint(project_id: str, 
                            process_request: ProcessRequest,
-                           project_repository: project_repository = Depends(get_project_repository),
-                           asset_repository: asset_repository = Depends(get_asset_repository),
-                           chunk_repository: chunk_repository = Depends(get_chunk_repository),
+                           project_repository: ProjectRepository = Depends(get_project_repository),
+                           asset_repository: AssetRepository = Depends(get_asset_repository),
+                           chunk_repository: ChunkRepository = Depends(get_chunk_repository),
                            process_controller: ProcessController = Depends(get_process_controller)):
 
     chunk_size = process_request.chunk_size
