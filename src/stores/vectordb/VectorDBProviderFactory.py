@@ -11,10 +11,14 @@ class VectorDBProviderFactory:
             VectorDBEnums.QDRANT.value: self._create_qdrant,
         }
 
+    
     def create(self, provider: str):
-        if provider not in self._providers:
+        if not provider:
             return None
-        return self._providers[provider]()
+        provider_key = provider.strip().upper()
+        if provider_key not in self._providers:
+            return None
+        return self._providers[provider_key]()
 
     def _create_qdrant(self):
         db_path = self.storage.get_database_path(db_name=self.config.VECTOR_DB_PATH)

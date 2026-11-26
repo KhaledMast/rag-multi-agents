@@ -1,7 +1,7 @@
 import re, os
 from .project_controller import ProjectController
 from services.file_storage_service import FileStorageService
-from helpers.config import Settings
+from core.config import Settings
 from fastapi import UploadFile
 from repositories import ResponseSignal
 from helpers.utils import generate_random_string

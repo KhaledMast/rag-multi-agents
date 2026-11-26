@@ -12,10 +12,14 @@ class LLMProviderFactory:
             LLMEnums.COHERE.value: self._create_cohere,
         }
 
+    
     def create(self, provider: str):
-        if provider not in self._providers:
+        if not provider:
             return None
-        return self._providers[provider]()
+        provider_key = provider.strip().upper()
+        if provider_key not in self._providers:
+            return None
+        return self._providers[provider_key]()
 
     def _create_openai(self):
         return OpenAIProvider(

@@ -1,9 +1,9 @@
 import logging
 from contextlib import asynccontextmanager
 from fastapi import FastAPI
-from app_state import AppState
-from helpers.config import get_settings
-from helpers.database import ensure_database_indexes
+from core.app_state import AppState
+from core.config import get_settings
+from core.database import ensure_database_indexes
 from motor.motor_asyncio import AsyncIOMotorClient
 from services.file_storage_service import FileStorageService
 from stores.llm.LLMProviderFactory import LLMProviderFactory

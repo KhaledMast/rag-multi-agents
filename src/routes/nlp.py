@@ -7,9 +7,9 @@ from repositories.chunk_repository import ChunkRepository
 from controllers import NLPController
 from repositories import ResponseSignal
 
-from dependencies import (
-    get_project_model,
-    get_chunk_model,
+from core.dependencies import (
+    get_project_repository,
+    get_chunk_repository,
     get_nlp_controller)
 
 logger = logging.getLogger('uvicorn.error')
@@ -23,13 +23,13 @@ nlp_router = APIRouter(
 @nlp_router.post("/index/push/{project_id}")
 async def index_project(project_id: str, 
                         push_request: PushRequest,
-                        project_model: ProjectRepository = Depends(get_project_model),
-                        chunk_model: ChunkRepository = Depends(get_chunk_model),
+                        project_repository: ProjectRepository = Depends(get_project_repository),
+                        chunk_repository: ChunkRepository = Depends(get_chunk_repository),
                         nlp_controller: NLPController = Depends(get_nlp_controller)):
 
     
 
-    project = await project_model.get_project_or_create_one(
+    project = await project_repository.get_project(
         project_id=project_id
     )
 
@@ -45,9 +45,10 @@ async def index_project(project_id: str,
     page_no = 1
     inserted_items_count = 0
     idx = 0
+    should_reset = bool(push_request.do_reset)
 
     while has_records:
-        page_chunks = await chunk_model.get_poject_chunks(project_id=str(project.id), page_no=page_no)
+        page_chunks = await chunk_repository.get_project_chunks(project_id=str(project.id), page_no=page_no)
         if len(page_chunks):
             page_no += 1
         
@@ -61,9 +62,11 @@ async def index_project(project_id: str,
         is_inserted = nlp_controller.index_into_vector_db(
             project=project,
             chunks=page_chunks,
-            do_reset=push_request.do_reset,
+            do_reset=should_reset,
             chunks_ids=chunks_ids
         )
+
+        should_reset = False
 
         if not is_inserted:
             return JSONResponse(
@@ -84,11 +87,11 @@ async def index_project(project_id: str,
 
 @nlp_router.get("/index/info/{project_id}")
 async def get_project_index_info(project_id: str,
-                                 project_model: ProjectRepository = Depends(get_project_model),
+                                 project_repository: ProjectRepository = Depends(get_project_repository),
                                  nlp_controller: NLPController = Depends(get_nlp_controller)):
 
 
-    project = await project_model.get_project_or_create_one(
+    project = await project_repository.get_project(
         project_id=project_id
     )
 
@@ -113,11 +116,11 @@ async def get_project_index_info(project_id: str,
 @nlp_router.post("/index/search/{project_id}")
 async def search_index(project_id: str, 
                        search_request: SearchRequest,
-                       project_model: ProjectRepository = Depends(get_project_model),
+                       project_repository: ProjectRepository = Depends(get_project_repository),
                        nlp_controller: NLPController = Depends(get_nlp_controller)):
     
 
-    project = await project_model.get_project_or_create_one(
+    project = await project_repository.get_project(
         project_id=project_id
     )
 
@@ -143,18 +146,18 @@ async def search_index(project_id: str,
     return JSONResponse(
         content={
             "signal": ResponseSignal.VECTORDB_SEARCH_SUCCESS.value,
-            "results": [result.dict() for result in results]
+            "results": [result.model_dump() for result in results]
         }
     )
 
 @nlp_router.post("/index/answer/{project_id}")
 async def answer_rag(project_id: str, 
                      search_request: SearchRequest,
-                     project_model: ProjectRepository = Depends(get_project_model),
+                     project_repository: ProjectRepository = Depends(get_project_repository),
                      nlp_controller: NLPController = Depends(get_nlp_controller)):
     
     
-    project = await project_model.get_project_or_create_one(
+    project = await project_repository.get_project(
         project_id=project_id
     )
 

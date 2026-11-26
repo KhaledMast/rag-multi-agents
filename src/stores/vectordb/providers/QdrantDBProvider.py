@@ -24,6 +24,8 @@ class QdrantDBProvider(VectorDBInterface):
         self.client = QdrantClient(path=self.db_path)
 
     def disconnect(self):
+        if self.client is not None:
+            self.client.close()
         self.client = None
 
     def is_collection_existed(self, collection_name: str) -> bool:
@@ -138,9 +140,10 @@ class QdrantDBProvider(VectorDBInterface):
             return None
 
         return [
-            RetrievedDocument(**{
-                "score": result.score,
-                "text": result.payload["text"],
-            })
+            RetrievedDocument(
+                score=result.score,
+                text=result.payload["text"],
+                metadata=result.payload.get("metadata"),
+            )
             for result in results.points
         ]

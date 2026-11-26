@@ -1,16 +1,16 @@
 from typing import Optional
 from pydantic import BaseModel, Field
 from helpers.fields import PyObjectId
-from datetime import datetime
+from datetime import datetime, timezone
 
 class Asset(BaseModel):
     id: Optional[PyObjectId] = Field(None, alias="_id")
     asset_project_id: PyObjectId
     asset_type: str = Field(..., min_length=1)
     asset_name: str = Field(..., min_length=1)
-    asset_size: int = Field(ge=0, default=None)
-    asset_config: dict = Field(default=None)
-    asset_pushed_at: datetime = Field(default_factory=datetime.utcnow)
+    asset_size: Optional[int] = Field(ge=0, default=None)
+    asset_config: Optional[dict] = Field(default=None)
+    asset_pushed_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
 
     model_config = {

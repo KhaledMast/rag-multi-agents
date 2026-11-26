@@ -8,15 +8,6 @@ from repositories.enums.DataBaseEnum import DataBaseEnum
 
 logger = logging.getLogger('uvicorn.error')
 
-# Mongo
-async def get_db(request: Request) -> AsyncIOMotorDatabase:
-    return request.app.state.mongodb_database
-
-
-# async def get_db_client(request: Request) -> AsyncIOMotorClient:
-#     return request.app.state.mongodb_client
-
-
 # The global index initialization function
 async def ensure_database_indexes(db_client: AsyncIOMotorClient, database_name: str):
     """

@@ -1,8 +1,8 @@
 from fastapi import Depends, Request
 from motor.motor_asyncio import AsyncIOMotorClient
 from controllers import DataController, NLPController, ProcessController, ProjectController
-from app_state import AppState
-from helpers.config import Settings, get_settings
+from core.app_state import AppState
+from core.config import Settings, get_settings
 from repositories import AssetRepository, ChunkRepository, ProjectRepository
 from services.file_storage_service import FileStorageService
 from stores.llm.LLMInterface import LLMInterface
@@ -41,21 +41,21 @@ def get_storage_service(state: AppState = Depends(get_app_state)) -> FileStorage
     return state.storage_service
 
 
-def get_project_model(
+def get_project_repository(
     db_client: AsyncIOMotorClient = Depends(get_db_client),
     settings: Settings = Depends(get_settings),
 ) -> ProjectRepository:
     return ProjectRepository(db_client=db_client, settings=settings)
 
 
-def get_asset_model(
+def get_asset_repository(
     db_client: AsyncIOMotorClient = Depends(get_db_client),
     settings: Settings = Depends(get_settings),
 ) -> AssetRepository:
     return AssetRepository(db_client=db_client, settings=settings)
 
 
-def get_chunk_model(
+def get_chunk_repository(
     db_client: AsyncIOMotorClient = Depends(get_db_client),
     settings: Settings = Depends(get_settings),
 ) -> ChunkRepository:

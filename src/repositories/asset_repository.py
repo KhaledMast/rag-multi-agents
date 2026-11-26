@@ -1,9 +1,10 @@
 from .base_repository import BaseRepository
-from helpers.config import Settings
+from core.config import Settings
 from .db_schemes import Asset
 from .enums.DataBaseEnum import DataBaseEnum
 from motor.motor_asyncio import AsyncIOMotorClient
 from pymongo.errors import DuplicateKeyError
+from bson import ObjectId
 
 class AssetRepository(BaseRepository):
 
@@ -26,10 +27,10 @@ class AssetRepository(BaseRepository):
             return asset
         
         except DuplicateKeyError:
-            raise ValueError(f"Asset with id {asset.asset_project_id} already exists")
+            raise ValueError(f"Asset '{asset.asset_name}' already exists in project {asset.asset_project_id}")
 
 
-    async def get_all_project_assets(self, asset_project_id: str, asset_type: str):
+    async def get_all_project_assets(self, asset_project_id: str | ObjectId, asset_type: str):
 
         records = await self.collection.find({
             "asset_project_id": asset_project_id,
@@ -41,7 +42,7 @@ class AssetRepository(BaseRepository):
             for record in records
         ]
 
-    async def get_asset_record(self, asset_project_id: str, asset_name: str):
+    async def get_asset_record(self, asset_project_id: str | ObjectId, asset_name: str):
 
         record = await self.collection.find_one({
             "asset_project_id": asset_project_id,

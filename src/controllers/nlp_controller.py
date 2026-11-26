@@ -1,6 +1,6 @@
 from repositories.db_schemes import Project, DataChunk
 from stores.llm.LLMEnums import DocumentTypeEnum
-from helpers.config import Settings
+from core.config import Settings
 from typing import List
 from langdetect import detect, LangDetectException
 import json, logging
@@ -19,10 +19,10 @@ class NLPController:
         self.embedding_client = embedding_client
         self.reranking_client = reranking_client
         self.template_parser = template_parser
-        self.rerank_top = settings.RERANK_TOP
+        self.rerank_top = settings.RERANK_TOP if settings else 5
         self.settings = settings
+        self.default_language = settings.DEFAULT_LANG if settings else "en"
 
-        self.default_language = settings.DEFAULT_LANG
         self.supported_languages = {
             lang for lang in (settings.DEFAULT_LANG, settings.PRIMARY_LANG, settings.SECONDARY_LANG)
             if lang
@@ -67,8 +67,7 @@ class NLPController:
         texts = [c.chunk_text for c in chunks ]
         metadata = [c.chunk_metadata for c in  chunks]
         vectors = [
-            self.embedding_client.embed_text(text=text, 
-                                            document_type=DocumentTypeEnum.DOCUMENT.value)
+            self.embedding_client.embed_text(text=text, document_type=DocumentTypeEnum.DOCUMENT.value)
             for text in texts
         ]
 
@@ -129,9 +128,6 @@ class NLPController:
         
         answer, full_prompt, chat_history = None, None, None
 
-        # result = detect(query)
-        # detected_lang = result if result is not None else "en"
-
         detected_lang = self._detect_supported_language(query)
 
         retrieved_documents = self.search_vector_db_collection(
@@ -167,6 +163,7 @@ class NLPController:
             self.generation_client.construct_prompt(
                 prompt=system_prompt,
                 role=self.generation_client.enums.SYSTEM.value,
+                truncate=False,
             )
         ]
 

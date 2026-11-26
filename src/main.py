@@ -1,5 +1,5 @@
 from fastapi import FastAPI
-from lifespan import lifespan
+from core.lifespan import lifespan
 from routes import base, data, nlp
 
 

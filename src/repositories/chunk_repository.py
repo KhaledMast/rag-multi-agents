@@ -1,7 +1,7 @@
 from typing import List
 from .base_repository import BaseRepository
 from .db_schemes import DataChunk
-from helpers.config import Settings
+from core.config import Settings
 from .enums.DataBaseEnum import DataBaseEnum
 from motor.motor_asyncio import AsyncIOMotorClient
 from pymongo.errors import DuplicateKeyError
@@ -30,7 +30,7 @@ class ChunkRepository(BaseRepository):
         try:
             chunk_data = chunk.model_dump(by_alias=True, exclude_none=True)
             result = await self.collection.insert_one(chunk_data)
-            chunk.id = str(result.inserted_id)
+            chunk.id = result.inserted_id
 
             return chunk
         except DuplicateKeyError:
@@ -47,7 +47,7 @@ class ChunkRepository(BaseRepository):
             DataChunk: The retrieved data chunk object.
         """
         record = await self.collection.find_one({
-            "file_id": file_id
+            "chunk_asset_id": file_id
         })
 
         if record is None:
@@ -87,7 +87,7 @@ class ChunkRepository(BaseRepository):
 
         return result.deleted_count
 
-    async def get_poject_chunks(self, project_id: str, page_no: int=1, page_size: int=50):
+    async def get_project_chunks(self, project_id: str, page_no: int=1, page_size: int=50):
         records = await self.collection.find({
                     "chunk_project_id": project_id
                 }).skip(

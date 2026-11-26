@@ -23,15 +23,10 @@ class OpenAIProvider(LLMInterface):
         self.embedding_model_id = None
         self.embedding_size = None
 
-        # OpenAI
-        # self.client = OpenAI(
-        #     api_key = self.api_key,
-        # )
 
-        # Gemini
         self.client = OpenAI(
-            api_key = self.api_key,
-            base_url = self.api_url
+            api_key=self.api_key,
+            base_url=self.api_url if self.api_url else None
         )
 
         self.enums = OpenAIEnums
@@ -54,9 +49,10 @@ class OpenAIProvider(LLMInterface):
         return text[:max_characters].strip()
 
 
-    def generate_text(self, prompt: str, chat_history: list=[], max_output_tokens: int=None,
+    def generate_text(self, prompt: str, chat_history: list=None, max_output_tokens: int=None,
                             temperature: float = None):
         
+
         if not self.client:
             self.logger.error("OpenAI Client was not set")
             return None
@@ -69,14 +65,15 @@ class OpenAIProvider(LLMInterface):
         temperature = temperature if temperature else self.default_generation_temperature
 
 
-        chat_history.append(
+        messages = list(chat_history) if chat_history else []
+
+        messages.append(
             self.construct_prompt(prompt=prompt, role=OpenAIEnums.USER.value, truncate=False)
         )
 
-        # TODO Chat Completions --> API	Responses API
         response = self.client.chat.completions.create(
             model=self.generation_model_id,
-            messages=chat_history,
+            messages=messages,
             max_tokens=max_output_tokens,
             temperature=temperature
         )
@@ -120,7 +117,4 @@ class OpenAIProvider(LLMInterface):
         return documents[:top_n] if top_n else documents
 
     def set_rerank_model(self, model_id: str):
-        pass
-
-    def rerank_documents(self, query: str, documents: list, top_n: int = None):
         pass
